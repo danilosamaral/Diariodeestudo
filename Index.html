@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hub de Estudos · Dados</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --paper:#F7F3EC; --ink:#1C1E26; --honey:#D98C2B; --slate:#2E4756;
+    --sage:#5A8F69; --line:#E2DACE; --muted:#6C6A63; --card:#FFFFFF; --tomato:#C05A42;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{-webkit-text-size-adjust:100%;}
+  body{background:var(--paper);color:var(--ink);font-family:'Inter',system-ui,sans-serif;line-height:1.55;font-size:16px;}
+  .wrap{max-width:680px;margin:0 auto;padding:0 18px;}
+  button{font-family:inherit;cursor:pointer;}
+  a{color:var(--slate);}
+
+  /* header */
+  header{background:var(--slate);color:#F7F3EC;padding:22px 0 16px;border-bottom:3px solid var(--honey);}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--honey);font-weight:700;}
+  h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:26px;line-height:1.08;margin:6px 0 4px;letter-spacing:-.01em;}
+  .sub{font-size:13px;color:#C9D3D8;}
+  .whoami{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:12px;color:#A9B6BC;font-family:'JetBrains Mono',monospace;}
+  .signout{background:rgba(255,255,255,.12);border:none;color:#F7F3EC;font-size:11px;padding:6px 12px;border-radius:8px;font-family:'JetBrains Mono',monospace;}
+
+  /* tabs */
+  nav.tabs{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:1px solid var(--line);display:flex;overflow-x:auto;}
+  nav.tabs button{flex:1;min-width:88px;background:none;border:none;padding:13px 6px 11px;font-size:13.5px;font-weight:600;color:var(--muted);border-bottom:2.5px solid transparent;white-space:nowrap;}
+  nav.tabs button.active{color:var(--slate);border-bottom-color:var(--honey);}
+
+  main{padding:18px 0 90px;}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  /* progress meter */
+  .meter{background:var(--slate);color:#fff;border-radius:14px;padding:14px 16px;margin-bottom:18px;}
+  .meter-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px;}
+  .meter-label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#C9D3D8;}
+  .pct{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:24px;}
+  .bar{height:9px;background:rgba(255,255,255,.16);border-radius:99px;overflow:hidden;}
+  .bar-fill{height:100%;width:0;background:linear-gradient(90deg,var(--honey),#F0B868);border-radius:99px;transition:width .5s ease;}
+  .meter-note{font-size:11px;color:#A9B6BC;margin-top:8px;font-family:'JetBrains Mono',monospace;}
+
+  /* phases */
+  .phase{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:12px;overflow:hidden;}
+  .phase-head{width:100%;text-align:left;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;}
+  .phase-num{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;background:var(--paper);color:var(--slate);border:1px solid var(--line);width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:none;}
+  .phase-meta{flex:1;min-width:0;}
+  .phase-title{font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:16px;line-height:1.2;}
+  .phase-when{font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:2px;}
+  .phase-prog{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--sage);font-weight:700;flex:none;}
+  .chevron{flex:none;transition:transform .25s ease;color:var(--muted);}
+  .phase.open .chevron{transform:rotate(180deg);}
+  .phase-body{display:none;padding:0 16px 6px;border-top:1px solid var(--line);}
+  .phase.open .phase-body{display:block;}
+  .phase-intro{font-size:13px;color:#3a3c44;padding:12px 0 4px;}
+  .phase-intro b{color:var(--ink);font-weight:600;}
+  .item{display:flex;gap:12px;padding:11px 0;border-top:1px solid var(--line);align-items:flex-start;}
+  .item:first-of-type{border-top:none;}
+  .box{flex:none;width:22px;height:22px;border-radius:7px;border:2px solid #C9C2B5;background:#fff;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s ease;}
+  .box svg{width:13px;height:13px;opacity:0;transform:scale(.6);transition:all .15s ease;}
+  .item.done .box{background:var(--sage);border-color:var(--sage);}
+  .item.done .box svg{opacity:1;transform:scale(1);}
+  .item-text{flex:1;font-size:13.5px;}
+  .item-text .wk{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--honey);display:block;margin-bottom:1px;}
+  .item-text .desc{color:#3a3c44;}
+  .item.done .item-text .desc{color:var(--muted);text-decoration:line-through;text-decoration-color:#C9C2B5;}
+  .item-text .deliver{display:block;font-size:11.5px;color:var(--slate);margin-top:3px;}
+  code{font-family:'JetBrains Mono',monospace;font-size:.85em;background:var(--paper);border:1px solid var(--line);padding:1px 5px;border-radius:5px;}
+  .tip{background:#FBF4E8;border:1px solid #F0DDBE;border-radius:11px;padding:11px 13px;margin:6px 0 12px;font-size:12.5px;color:#6b5526;}
+  .tip b{color:#946315;}
+
+  /* section titles + generic cards */
+  .section-eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:2px 0 12px;font-weight:700;}
+  .lead{font-size:13.5px;color:#3a3c44;margin-bottom:16px;}
+
+  /* forms */
+  .field{margin-bottom:10px;}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:600;}
+  input[type=text],input[type=url],input[type=email],input[type=date],textarea,select{
+    width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font-family:inherit;font-size:15px;color:var(--ink);
+  }
+  textarea{resize:vertical;min-height:120px;line-height:1.5;}
+  .btn{background:var(--slate);color:#fff;border:none;border-radius:10px;padding:12px 18px;font-size:14px;font-weight:600;}
+  .btn.honey{background:var(--honey);}
+  .btn.ghost{background:none;border:1px solid var(--line);color:var(--muted);}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+  /* link cards */
+  .linkcard{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px 14px;margin-bottom:10px;}
+  .linkcard .cat{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:99px;font-family:'JetBrains Mono',monospace;margin-bottom:6px;}
+  .cat-curso{background:#E7F0EA;color:#3f7554;} .cat-ferramenta{background:#FBF0DE;color:#96631a;}
+  .cat-app{background:#EAEFF2;color:#33566a;} .cat-ref{background:#F3E9E6;color:#9c5140;}
+  .linkcard h4{font-family:'Bricolage Grotesque',sans-serif;font-size:15.5px;font-weight:600;margin-bottom:2px;}
+  .linkcard h4 a{color:var(--ink);text-decoration:none;}
+  .linkcard .lnk{font-size:12px;color:var(--slate);word-break:break-all;font-family:'JetBrains Mono',monospace;}
+  .linkcard .nota{font-size:12.5px;color:var(--muted);margin-top:5px;}
+  .linkcard .del{float:right;background:none;border:none;color:var(--tomato);font-size:12px;font-weight:600;}
+
+  /* diary */
+  .entry{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:14px 15px;margin-bottom:11px;}
+  .entry .edate{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--honey);margin-bottom:6px;display:flex;justify-content:space-between;}
+  .entry .edate .del{background:none;border:none;color:var(--tomato);font-size:11px;font-weight:600;}
+  .entry .body{font-size:14px;color:#2f313a;white-space:pre-wrap;line-height:1.6;}
+
+  .empty{text-align:center;color:var(--muted);font-size:13px;padding:24px 10px;border:1px dashed var(--line);border-radius:13px;}
+
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-size:13px;padding:10px 18px;border-radius:99px;opacity:0;transition:all .3s;z-index:60;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* login gate */
+  #gate{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .gatebox{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px 22px;max-width:400px;width:100%;text-align:center;}
+  .gatebox h2{font-family:'Bricolage Grotesque',sans-serif;font-size:22px;margin-bottom:6px;}
+  .gatebox p{font-size:13.5px;color:var(--muted);margin-bottom:18px;}
+  .config-warn{background:#FDECEA;border:1px solid #F5C6BE;color:#9c3b2a;border-radius:12px;padding:14px;font-size:13px;margin:20px 0;text-align:left;}
+
+  /* PDF report */
+  #printReport{display:none;}
+  .report-head h2{font-family:'Bricolage Grotesque',sans-serif;font-size:22px;}
+  .report-head .rmeta{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);margin:4px 0 16px;}
+  .report-block{margin-bottom:18px;}
+  .report-block h3{font-size:15px;font-family:'Bricolage Grotesque',sans-serif;border-bottom:2px solid var(--honey);padding-bottom:4px;margin-bottom:8px;}
+  .rphase{font-size:13px;margin:3px 0;}
+  .rentry{margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line);}
+  .rentry .rd{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--slate);}
+  .rentry .rb{font-size:13px;white-space:pre-wrap;margin-top:3px;}
+
+  @media print{
+    nav.tabs,header,main,.toast{display:none!important;}
+    body{background:#fff;}
+    #printReport{display:block!important;padding:0;}
+    .wrap{max-width:none;padding:0;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN GATE ============ -->
+<div id="gate">
+  <div class="gatebox">
+    <div class="eyebrow" style="color:var(--honey)">Hub de Estudos · Dados</div>
+    <h2>Seus estudos, num lugar só</h2>
+    <p>Entre com seu e-mail. Enviamos um link mágico — sem senha.</p>
+    <div id="configWarn" class="config-warn" style="display:none">
+      <b>Falta configurar o Supabase.</b> Preencha <code>URL</code> e <code>anon key</code> no topo do arquivo (bloco <code>CONFIG</code>) e recarregue.
+    </div>
+    <div id="loginForm">
+      <div class="field"><input type="email" id="email" placeholder="voce@email.com" autocomplete="email" /></div>
+      <button class="btn honey" id="loginBtn" style="width:100%">Enviar link de acesso</button>
+      <p id="loginMsg" style="margin:14px 0 0;font-size:12.5px;color:var(--sage);min-height:16px"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" style="display:none">
+  <header>
+    <div class="wrap">
+      <div class="eyebrow">Hub de Estudos</div>
+      <h1>Economia → Analista de Dados</h1>
+      <div class="sub">Danilo · 10h/semana · meta 9–14 meses</div>
+      <div class="whoami"><span id="userEmail"></span><button class="signout" id="signout">sair</button></div>
+    </div>
+  </header>
+
+  <nav class="tabs wrap" style="max-width:680px">
+    <button data-tab="plano" class="active">Plano</button>
+    <button data-tab="materiais">Materiais</button>
+    <button data-tab="diario">Diário</button>
+    <button data-tab="pdf">PDF</button>
+  </nav>
+
+  <main class="wrap">
+    <!-- PLANO -->
+    <section class="tab-panel active" id="tab-plano">
+      <div class="meter">
+        <div class="meter-top"><span class="meter-label">Progresso geral</span><span class="pct" id="pct">0%</span></div>
+        <div class="bar"><div class="bar-fill" id="barfill"></div></div>
+        <div class="meter-note" id="count">carregando…</div>
+      </div>
+      <div id="phases"></div>
+    </section>
+
+    <!-- MATERIAIS -->
+    <section class="tab-panel" id="tab-materiais">
+      <div class="section-eyebrow">Materiais de estudo</div>
+      <p class="lead">Guarde aqui os links dos cursos, ferramentas e apps. PDFs ficam no seu Drive/OneDrive — cole o link de compartilhamento.</p>
+      <div class="linkcard" style="background:#FBFAF6">
+        <div class="field"><label>Título</label><input type="text" id="lkTitle" placeholder="Ex: Curso SQL Hashtag" /></div>
+        <div class="field"><label>Link</label><input type="url" id="lkUrl" placeholder="https://…" /></div>
+        <div class="field"><label>Categoria</label>
+          <select id="lkCat"><option value="curso">Curso</option><option value="ferramenta">Ferramenta</option><option value="app">App meu</option><option value="ref">Referência</option></select>
+        </div>
+        <div class="field"><label>Nota (opcional)</label><input type="text" id="lkNote" placeholder="Onde parei, o que é…" /></div>
+        <button class="btn honey" id="lkAdd">Adicionar material</button>
+      </div>
+      <div id="linksList" style="margin-top:16px"></div>
+    </section>
+
+    <!-- DIÁRIO -->
+    <section class="tab-panel" id="tab-diario">
+      <div class="section-eyebrow">Diário de estudo</div>
+      <p class="lead">Escreva o que estudou hoje: o que entendeu, onde travou, dúvidas. É isso que vira progresso palpável — e o que eu leio no PDF pra te orientar.</p>
+      <div class="linkcard" style="background:#FBFAF6">
+        <div class="field"><label>Data</label><input type="date" id="dyDate" /></div>
+        <div class="field"><label>O que rolou hoje</label><textarea id="dyBody" placeholder="Hoje pratiquei JOINs no Contoso… entendi INNER JOIN, mas LEFT JOIN ainda confunde…"></textarea></div>
+        <button class="btn honey" id="dyAdd">Salvar entrada</button>
+      </div>
+      <div id="diaryList" style="margin-top:16px"></div>
+    </section>
+
+    <!-- PDF -->
+    <section class="tab-panel" id="tab-pdf">
+      <div class="section-eyebrow">Gerar PDF para o Claude</div>
+      <p class="lead">Monta um relatório com seu progresso + todas as entradas do diário. Toque em gerar, e no menu do Safari escolha <b>Compartilhar → Imprimir → salvar como PDF</b>. Depois é só me enviar.</p>
+      <button class="btn" id="genPdf" style="width:100%">Gerar relatório e imprimir</button>
+      <p style="font-size:12px;color:var(--muted);margin-top:10px;text-align:center">O relatório aparece só na impressão — a tela continua normal.</p>
+    </section>
+  </main>
+</div>
+
+<!-- print-only report -->
+<div id="printReport" class="wrap"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   CONFIG — preencha depois de criar o projeto no Supabase.
+   Pegue em: Supabase → Project Settings → API
+   ============================================================ */
+const CONFIG = {
+  url:     "https://nrosywkyjamahgwfzsjg.supabase.co",
+  anonKey: "sb_publishable_NePVZG3IiFnZxvWTrivCdw_6J-Lxp56"
+};
+/* ============================================================ */
+
+const plan = [
+  {num:"01",title:"SQL — a maior alavanca",when:"Meses 1–3 · ~5h/semana",
+   intro:"Sua principal lacuna e o melhor retorno por hora. Pratique no Supabase do Ninho, com seus dados reais. Teoria: <b>SQLBolt</b>, que roda no celular.",
+   items:[
+    {id:"f1a",wk:"Semanas 1–2",desc:"Fundamentos: <code>SELECT</code>, <code>FROM</code>, <code>WHERE</code>.",deliver:"5 consultas que filtram suas transações"},
+    {id:"f1b",wk:"Semanas 3–4",desc:"Agregar: <code>COUNT</code>, <code>SUM</code>, <code>AVG</code>, <code>GROUP BY</code>.",deliver:"Gasto por categoria, mês a mês"},
+    {id:"f1c",wk:"Semanas 5–6",desc:"Filtrar grupos com <code>HAVING</code>, apelidos e expressões.",deliver:"Categorias acima de R$ X no mês"},
+    {id:"f1d",wk:"Semanas 7–8",desc:"<code>JOIN</code> — o conceito mais importante. Juntar transações × contas × categorias.",deliver:"Relatório cruzando 3 tabelas"},
+    {id:"f1e",wk:"Semanas 9–10",desc:"Subconsultas e <code>CTEs</code> (<code>WITH</code>).",deliver:"% de cada categoria sobre o total"},
+    {id:"f1f",wk:"Semanas 11–12",desc:"Funções de janela (somas acumuladas, médias móveis).",deliver:"Mini-projeto: análise de gastos em SQL"}
+   ]},
+  {num:"02",title:"Python para dados",when:"Meses 2–5 · sobrepõe",
+   intro:"Você não aprende do zero — <b>traduz</b> o que já faz em JavaScript. Ferramenta: <b>Google Colab</b>, no navegador.",
+   tip:"Escrever Python no celular incomoda um pouco. Pense num tablet com teclado para esta fase.",
+   items:[
+    {id:"f2a",desc:"Rodar o primeiro notebook no Colab."},
+    {id:"f2b",desc:"Abrir um CSV com pandas (<code>head</code>, <code>info</code>, <code>describe</code>)."},
+    {id:"f2c",desc:"Limpar dados: faltantes, tipos, datas."},
+    {id:"f2d",desc:"Agrupar com <code>groupby</code> — refaça uma análise sua."},
+    {id:"f2e",desc:"Primeiro gráfico (matplotlib/seaborn)."},
+    {id:"f2f",desc:"Mini-projeto: recriar a análise da academia em pandas.",deliver:"2º item do portfólio"}
+   ]},
+  {num:"03",title:"Formalizar a estatística",when:"Meses 4–7",
+   intro:"Você tem a intuição de economista; falta o <b>vocabulário</b> de entrevista. Saber o <b>porquê</b> de cada teste.",
+   items:[
+    {id:"f3a",desc:"Descritiva: média, mediana, desvio, distribuições."},
+    {id:"f3b",desc:"Inferência: p-valor e intervalo de confiança, sem decoreba."},
+    {id:"f3c",desc:"Escolher o teste: t, qui-quadrado, correlação."},
+    {id:"f3d",desc:"Entender teste A/B."},
+    {id:"f3e",desc:"Correlação ≠ causalidade — seu diferencial.",deliver:"O raciocínio que a IA não faz por você"}
+   ]},
+  {num:"04",title:"Portfólio — o coração da contratação",when:"Meses 5–10 · contínuo",
+   intro:"Aqui a vaga se decide. O <b>dashboard da academia</b> já é um estudo de caso de júnior.",
+   items:[
+    {id:"f4a",desc:"Escolher 3 projetos: academia + SQL/finanças + 1 novo."},
+    {id:"f4b",desc:"Cada um: problema → o que fiz → o que descobri."},
+    {id:"f4c",desc:"Publicar num lugar acessível do celular."},
+    {id:"f4d",desc:"1 dashboard interativo + 1 análise exploratória. Conhecer Power BI."},
+    {id:"f4e",desc:"Documentar como usou IA no processo.",deliver:"Mostra fluência em IA"}
+   ]},
+  {num:"05",title:"Preparação para vagas",when:"Meses 8–12",
+   intro:"Com portfólio na mão, se posicionar. Você se candidata <b>antes</b> de se sentir pronto.",
+   items:[
+    {id:"f5a",desc:"Currículo focado em projetos e resultados."},
+    {id:"f5b",desc:"LinkedIn com palavras-chave: SQL, Python, dados."},
+    {id:"f5c",desc:"Treinar SQL ao vivo (cronometrado)."},
+    {id:"f5d",desc:"Defender cada projeto (storytelling)."},
+    {id:"f5e",desc:"Começar a se candidatar de verdade.",deliver:"O ponto de virada"}
+   ]}
+];
+const allItems = plan.flatMap(p=>p.items.map(i=>i.id));
+const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+let supa=null, user=null, progress={};
+const $=id=>document.getElementById(id);
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600);}
+
+/* ---------- boot ---------- */
+(function boot(){
+  if(!CONFIG.url || !CONFIG.anonKey){ $('configWarn').style.display='block'; $('loginForm').style.display='none'; return; }
+  supa = window.supabase.createClient(CONFIG.url, CONFIG.anonKey);
+  supa.auth.getSession().then(({data})=>{ if(data.session){ enterApp(data.session.user); } });
+  supa.auth.onAuthStateChange((_e,session)=>{ if(session){ enterApp(session.user); } });
+})();
+
+$('loginBtn')?.addEventListener('click', async ()=>{
+  const email=$('email').value.trim();
+  if(!email){ $('loginMsg').style.color='var(--tomato)'; $('loginMsg').textContent='Digite seu e-mail.'; return; }
+  $('loginBtn').disabled=true; $('loginMsg').style.color='var(--muted)'; $('loginMsg').textContent='Enviando…';
+  const {error}=await supa.auth.signInWithOtp({email,options:{emailRedirectTo:window.location.href}});
+  $('loginBtn').disabled=false;
+  if(error){ $('loginMsg').style.color='var(--tomato)'; $('loginMsg').textContent='Erro: '+error.message; }
+  else{ $('loginMsg').style.color='var(--sage)'; $('loginMsg').textContent='Link enviado! Confira seu e-mail e abra o link neste aparelho.'; }
+});
+
+async function enterApp(u){
+  user=u; $('gate').style.display='none'; $('app').style.display='block';
+  $('userEmail').textContent=u.email;
+  renderPhases();
+  await Promise.all([loadProgress(), loadLinks(), loadDiary()]);
+  const d=new Date(); $('dyDate').value=d.toISOString().slice(0,10);
+}
+
+$('signout')?.addEventListener('click', async ()=>{ await supa.auth.signOut(); location.reload(); });
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('nav.tabs button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); $('tab-'+b.dataset.tab).classList.add('active');
+    window.scrollTo(0,0);
+  });
+});
+
+/* ---------- PLANO ---------- */
+function renderPhases(){
+  const el=$('phases'); el.innerHTML='';
+  plan.forEach((p,idx)=>{
+    const div=document.createElement('div');
+    div.className='phase'+(idx===0?' open':'');
+    const items=p.items.map(it=>`
+      <div class="item" data-id="${it.id}">
+        <div class="box">${CHECK}</div>
+        <div class="item-text">${it.wk?`<span class="wk">${it.wk}</span>`:''}<span class="desc">${it.desc}</span>${it.deliver?`<span class="deliver"><b>Entrega:</b> ${it.deliver}</span>`:''}</div>
+      </div>`).join('');
+    div.innerHTML=`
+      <button class="phase-head">
+        <span class="phase-num">${p.num}</span>
+        <span class="phase-meta"><span class="phase-title">${p.title}</span><span class="phase-when">${p.when}</span></span>
+        <span class="phase-prog" data-prog="${p.num}">0/${p.items.length}</span>
+        <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="phase-body"><p class="phase-intro">${p.intro}</p>${p.tip?`<div class="tip">${p.tip}</div>`:''}${items}</div>`;
+    el.appendChild(div);
+    div.querySelector('.phase-head').addEventListener('click',()=>div.classList.toggle('open'));
+  });
+  el.querySelectorAll('.item').forEach(it=>{
+    it.addEventListener('click',()=>toggleItem(it.dataset.id,it));
+  });
+}
+async function loadProgress(){
+  try{
+    const {data}=await supa.from('estudo_progresso').select('item_id,done').eq('user_id',user.id);
+    progress={}; (data||[]).forEach(r=>progress[r.item_id]=r.done);
+  }catch(e){}
+  paintProgress();
+}
+function paintProgress(){
+  document.querySelectorAll('.item').forEach(el=>el.classList.toggle('done',!!progress[el.dataset.id]));
+  const done=allItems.filter(id=>progress[id]).length, total=allItems.length, pct=Math.round(done/total*100);
+  $('pct').textContent=pct+'%'; $('barfill').style.width=pct+'%'; $('count').textContent=`${done} de ${total} etapas concluídas`;
+  plan.forEach(p=>{const d=p.items.filter(i=>progress[i.id]).length;const e=document.querySelector(`[data-prog="${p.num}"]`);if(e)e.textContent=`${d}/${p.items.length}`;});
+}
+async function toggleItem(id,el){
+  const val=!progress[id]; progress[id]=val; el.classList.toggle('done',val); paintProgress();
+  try{ await supa.from('estudo_progresso').upsert({user_id:user.id,item_id:id,done:val,updated_at:new Date().toISOString()},{onConflict:'user_id,item_id'}); }
+  catch(e){ toast('Erro ao salvar'); }
+}
+
+/* ---------- MATERIAIS ---------- */
+const catLabel={curso:'Curso',ferramenta:'Ferramenta',app:'App meu',ref:'Referência'};
+const catClass={curso:'cat-curso',ferramenta:'cat-ferramenta',app:'cat-app',ref:'cat-ref'};
+async function loadLinks(){
+  let data=[]; try{ const r=await supa.from('estudo_links').select('*').eq('user_id',user.id).order('created_at',{ascending:false}); data=r.data||[]; }catch(e){}
+  const el=$('linksList');
+  if(!data.length){ el.innerHTML='<div class="empty">Nenhum material ainda. Adicione o link do seu curso de SQL para começar.</div>'; return; }
+  el.innerHTML=data.map(l=>`
+    <div class="linkcard">
+      <button class="del" data-del="${l.id}">excluir</button>
+      <span class="cat ${catClass[l.categoria]||'cat-ref'}">${catLabel[l.categoria]||'Ref'}</span>
+      <h4><a href="${l.url}" target="_blank" rel="noopener">${esc(l.titulo)}</a></h4>
+      <div class="lnk">${esc(l.url)}</div>
+      ${l.nota?`<div class="nota">${esc(l.nota)}</div>`:''}
+    </div>`).join('');
+  el.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>delLink(b.dataset.del)));
+}
+$('lkAdd').addEventListener('click', async ()=>{
+  const titulo=$('lkTitle').value.trim(), url=$('lkUrl').value.trim();
+  if(!titulo||!url){ toast('Título e link são obrigatórios'); return; }
+  try{
+    await supa.from('estudo_links').insert({user_id:user.id,titulo,url,categoria:$('lkCat').value,nota:$('lkNote').value.trim()||null});
+    $('lkTitle').value='';$('lkUrl').value='';$('lkNote').value='';
+    toast('Material salvo'); loadLinks();
+  }catch(e){ toast('Erro ao salvar'); }
+});
+async function delLink(id){ if(!confirm('Excluir este material?'))return; try{ await supa.from('estudo_links').delete().eq('id',id); loadLinks(); }catch(e){} }
+
+/* ---------- DIÁRIO ---------- */
+let diaryCache=[];
+async function loadDiary(){
+  let data=[]; try{ const r=await supa.from('estudo_diario').select('*').eq('user_id',user.id).order('data',{ascending:false}).order('created_at',{ascending:false}); data=r.data||[]; }catch(e){}
+  diaryCache=data; const el=$('diaryList');
+  if(!data.length){ el.innerHTML='<div class="empty">Seu diário está vazio. A primeira entrada é sempre a mais difícil — escreva duas linhas do que fez hoje.</div>'; return; }
+  el.innerHTML=data.map(d=>`
+    <div class="entry">
+      <div class="edate"><span>${fmtDate(d.data)}</span><button class="del" data-del="${d.id}">excluir</button></div>
+      <div class="body">${esc(d.corpo)}</div>
+    </div>`).join('');
+  el.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>delEntry(b.dataset.del)));
+}
+$('dyAdd').addEventListener('click', async ()=>{
+  const data=$('dyDate').value, corpo=$('dyBody').value.trim();
+  if(!corpo){ toast('Escreva algo antes de salvar'); return; }
+  try{
+    await supa.from('estudo_diario').insert({user_id:user.id,data:data||new Date().toISOString().slice(0,10),corpo});
+    $('dyBody').value=''; toast('Entrada salva'); loadDiary();
+  }catch(e){ toast('Erro ao salvar'); }
+});
+async function delEntry(id){ if(!confirm('Excluir esta entrada?'))return; try{ await supa.from('estudo_diario').delete().eq('id',id); loadDiary(); }catch(e){} }
+
+/* ---------- PDF ---------- */
+$('genPdf').addEventListener('click',()=>{
+  const done=allItems.filter(id=>progress[id]).length, total=allItems.length, pct=Math.round(done/total*100);
+  const phaseRows=plan.map(p=>{const d=p.items.filter(i=>progress[i.id]).length;return `<div class="rphase"><b>${p.num}. ${p.title}</b> — ${d}/${p.items.length}</div>`;}).join('');
+  const entries=diaryCache.length?diaryCache.map(d=>`<div class="rentry"><div class="rd">${fmtDate(d.data)}</div><div class="rb">${esc(d.corpo)}</div></div>`).join(''):'<p style="font-size:13px;color:#888">Sem entradas no diário ainda.</p>';
+  $('printReport').innerHTML=`
+    <div class="report-head">
+      <h2>Relatório de Estudos — Danilo</h2>
+      <div class="rmeta">Gerado em ${fmtDate(new Date().toISOString().slice(0,10))} · Progresso geral: ${pct}% (${done}/${total})</div>
+    </div>
+    <div class="report-block"><h3>Progresso por fase</h3>${phaseRows}</div>
+    <div class="report-block"><h3>Diário de estudo</h3>${entries}</div>`;
+  setTimeout(()=>window.print(),80);
+});
+
+/* ---------- utils ---------- */
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function fmtDate(iso){ if(!iso)return''; const [y,m,d]=iso.split('-'); const meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez']; return `${d} ${meses[+m-1]} ${y}`; }
+</script>
+</body>
+</html>
