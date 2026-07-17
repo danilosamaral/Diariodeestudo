@@ -60,20 +60,50 @@
   .phase.open .phase-body{display:block;}
   .phase-intro{font-size:13px;color:#3a3c44;padding:12px 0 4px;}
   .phase-intro b{color:var(--ink);font-weight:600;}
-  .item{display:flex;gap:12px;padding:11px 0;border-top:1px solid var(--line);align-items:flex-start;}
-  .item:first-of-type{border-top:none;}
-  .box{flex:none;width:22px;height:22px;border-radius:7px;border:2px solid #C9C2B5;background:#fff;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s ease;}
-  .box svg{width:13px;height:13px;opacity:0;transform:scale(.6);transition:all .15s ease;}
-  .item.done .box{background:var(--sage);border-color:var(--sage);}
-  .item.done .box svg{opacity:1;transform:scale(1);}
-  .item-text{flex:1;font-size:13.5px;}
-  .item-text .wk{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--honey);display:block;margin-bottom:1px;}
-  .item-text .desc{color:#3a3c44;}
-  .item.done .item-text .desc{color:var(--muted);text-decoration:line-through;text-decoration-color:#C9C2B5;}
-  .item-text .deliver{display:block;font-size:11.5px;color:var(--slate);margin-top:3px;}
   code{font-family:'JetBrains Mono',monospace;font-size:.85em;background:var(--paper);border:1px solid var(--line);padding:1px 5px;border-radius:5px;}
   .tip{background:#FBF4E8;border:1px solid #F0DDBE;border-radius:11px;padding:11px 13px;margin:6px 0 12px;font-size:12.5px;color:#6b5526;}
   .tip b{color:#946315;}
+
+  /* ---- tópicos e subtópicos (plano editável) ---- */
+  .topics{border-top:1px solid var(--line);margin-top:6px;}
+  .topic{border-top:1px solid var(--line);padding:11px 0 9px;}
+  .topic:first-child{border-top:none;}
+  .topic-head{display:flex;align-items:flex-start;gap:6px;}
+  .topic-toggle{flex:1;min-width:0;display:flex;align-items:flex-start;gap:9px;background:none;border:none;text-align:left;padding:2px 0;}
+  .tw-chev{flex:none;margin-top:2px;color:var(--muted);transition:transform .2s ease;}
+  .topic.open .tw-chev{transform:rotate(90deg);}
+  .topic-title{font-weight:600;font-size:14.5px;color:var(--ink);line-height:1.25;}
+  .topic-frac{flex:none;font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700;color:var(--sage);white-space:nowrap;margin-top:3px;}
+  .topic-frac.zero{color:var(--muted);font-weight:600;}
+  .tbar{height:5px;background:var(--line);border-radius:99px;overflow:hidden;margin:8px 0 2px;}
+  .tbar-fill{height:100%;width:0;background:var(--sage);border-radius:99px;transition:width .4s ease;}
+  .tmenu{display:flex;gap:1px;flex:none;}
+  .icon-btn{background:none;border:none;color:var(--muted);padding:6px 5px;border-radius:7px;display:inline-flex;align-items:center;font-family:inherit;font-size:14px;line-height:1;}
+  .icon-btn:active{background:var(--paper);}
+  .icon-btn.danger{color:var(--tomato);}
+
+  .subs{display:none;padding:8px 0 2px 4px;}
+  .topic.open .subs{display:block;}
+  .sub{display:flex;gap:9px;align-items:flex-start;padding:9px 0;border-top:1px dashed var(--line);}
+  .sub:first-child{border-top:none;}
+  .sub-box{flex:none;width:20px;height:20px;border-radius:6px;border:2px solid #C9C2B5;background:#fff;margin-top:1px;padding:0;display:flex;align-items:center;justify-content:center;transition:all .15s ease;}
+  .sub-box svg{width:12px;height:12px;opacity:0;transform:scale(.6);transition:all .15s ease;}
+  .sub.done .sub-box{background:var(--sage);border-color:var(--sage);}
+  .sub.done .sub-box svg{opacity:1;transform:scale(1);}
+  .sub-main{flex:1;min-width:0;}
+  .sub-title{font-size:13.5px;color:#3a3c44;line-height:1.3;}
+  .sub.done .sub-title{color:var(--muted);text-decoration:line-through;text-decoration-color:#C9C2B5;}
+  .sub-tools{display:flex;gap:1px;align-items:center;margin-top:4px;flex-wrap:wrap;}
+  .sub-tools .obs-btn{font-size:11.5px;font-weight:600;color:var(--slate);padding:4px 7px;border-radius:7px;background:none;border:none;font-family:inherit;margin-right:auto;}
+  .obs-preview{font-size:12.5px;color:#5a5750;background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--honey);border-radius:8px;padding:8px 10px;margin-top:7px;white-space:pre-wrap;line-height:1.5;}
+  .obs-wrap{margin-top:7px;display:none;}
+  .obs-wrap.show{display:block;}
+  .obs-wrap textarea{min-height:70px;font-size:13.5px;padding:9px 10px;}
+  .add-sub{background:none;border:1px dashed var(--line);color:var(--slate);font-size:12.5px;font-weight:600;padding:8px 12px;border-radius:9px;margin:6px 0 2px;font-family:inherit;}
+  .phase-actions{display:flex;gap:8px;flex-wrap:wrap;padding:12px 0 14px;}
+  .mini-btn{background:none;border:1px dashed var(--line);color:var(--slate);font-size:12.5px;font-weight:600;padding:9px 13px;border-radius:9px;font-family:inherit;}
+  .mini-btn.seed{border-style:solid;background:#FBF4E8;border-color:#F0DDBE;color:#946315;}
+  .topics-empty{font-size:12.5px;color:var(--muted);padding:10px 0 2px;}
 
   /* section titles + generic cards */
   .section-eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:2px 0 12px;font-weight:700;}
@@ -126,7 +156,11 @@
   .report-head .rmeta{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);margin:4px 0 16px;}
   .report-block{margin-bottom:18px;}
   .report-block h3{font-size:15px;font-family:'Bricolage Grotesque',sans-serif;border-bottom:2px solid var(--honey);padding-bottom:4px;margin-bottom:8px;}
+  .rphaseblock{margin-bottom:13px;}
   .rphase{font-size:13px;margin:3px 0;}
+  .rtopic{font-size:12.5px;margin:5px 0 4px 12px;}
+  .rsub{font-size:12px;margin:2px 0 2px 22px;color:#333;}
+  .robs{font-size:11px;color:#666;margin:1px 0 4px 16px;font-style:italic;}
   .rentry{margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line);}
   .rentry .rd{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--slate);}
   .rentry .rb{font-size:13px;white-space:pre-wrap;margin-top:3px;}
@@ -242,60 +276,57 @@ const CONFIG = {
 };
 /* ============================================================ */
 
+/* Fases do plano (o "esqueleto" fixo). Dentro de cada uma,
+   os TÓPICOS e SUBTÓPICOS são editáveis e vivem no Supabase. */
 const plan = [
   {num:"01",title:"SQL — a maior alavanca",when:"Meses 1–3 · ~5h/semana",
-   intro:"Sua principal lacuna e o melhor retorno por hora. Pratique no Supabase do Ninho, com seus dados reais. Teoria: <b>SQLBolt</b>, que roda no celular.",
-   items:[
-    {id:"f1a",wk:"Semanas 1–2",desc:"Fundamentos: <code>SELECT</code>, <code>FROM</code>, <code>WHERE</code>.",deliver:"5 consultas que filtram suas transações"},
-    {id:"f1b",wk:"Semanas 3–4",desc:"Agregar: <code>COUNT</code>, <code>SUM</code>, <code>AVG</code>, <code>GROUP BY</code>.",deliver:"Gasto por categoria, mês a mês"},
-    {id:"f1c",wk:"Semanas 5–6",desc:"Filtrar grupos com <code>HAVING</code>, apelidos e expressões.",deliver:"Categorias acima de R$ X no mês"},
-    {id:"f1d",wk:"Semanas 7–8",desc:"<code>JOIN</code> — o conceito mais importante. Juntar transações × contas × categorias.",deliver:"Relatório cruzando 3 tabelas"},
-    {id:"f1e",wk:"Semanas 9–10",desc:"Subconsultas e <code>CTEs</code> (<code>WITH</code>).",deliver:"% de cada categoria sobre o total"},
-    {id:"f1f",wk:"Semanas 11–12",desc:"Funções de janela (somas acumuladas, médias móveis).",deliver:"Mini-projeto: análise de gastos em SQL"}
-   ]},
+   intro:"Sua principal lacuna e o melhor retorno por hora. Pratique no Supabase do Ninho, com seus dados reais. Teoria: <b>SQLBolt</b>, que roda no celular."},
   {num:"02",title:"Python para dados",when:"Meses 2–5 · sobrepõe",
    intro:"Você não aprende do zero — <b>traduz</b> o que já faz em JavaScript. Ferramenta: <b>Google Colab</b>, no navegador.",
-   tip:"Escrever Python no celular incomoda um pouco. Pense num tablet com teclado para esta fase.",
-   items:[
-    {id:"f2a",desc:"Rodar o primeiro notebook no Colab."},
-    {id:"f2b",desc:"Abrir um CSV com pandas (<code>head</code>, <code>info</code>, <code>describe</code>)."},
-    {id:"f2c",desc:"Limpar dados: faltantes, tipos, datas."},
-    {id:"f2d",desc:"Agrupar com <code>groupby</code> — refaça uma análise sua."},
-    {id:"f2e",desc:"Primeiro gráfico (matplotlib/seaborn)."},
-    {id:"f2f",desc:"Mini-projeto: recriar a análise da academia em pandas.",deliver:"2º item do portfólio"}
-   ]},
+   tip:"Escrever Python no celular incomoda um pouco. Pense num tablet com teclado para esta fase."},
   {num:"03",title:"Formalizar a estatística",when:"Meses 4–7",
-   intro:"Você tem a intuição de economista; falta o <b>vocabulário</b> de entrevista. Saber o <b>porquê</b> de cada teste.",
-   items:[
-    {id:"f3a",desc:"Descritiva: média, mediana, desvio, distribuições."},
-    {id:"f3b",desc:"Inferência: p-valor e intervalo de confiança, sem decoreba."},
-    {id:"f3c",desc:"Escolher o teste: t, qui-quadrado, correlação."},
-    {id:"f3d",desc:"Entender teste A/B."},
-    {id:"f3e",desc:"Correlação ≠ causalidade — seu diferencial.",deliver:"O raciocínio que a IA não faz por você"}
-   ]},
+   intro:"Você tem a intuição de economista; falta o <b>vocabulário</b> de entrevista. Saber o <b>porquê</b> de cada teste."},
   {num:"04",title:"Portfólio — o coração da contratação",when:"Meses 5–10 · contínuo",
-   intro:"Aqui a vaga se decide. O <b>dashboard da academia</b> já é um estudo de caso de júnior.",
-   items:[
-    {id:"f4a",desc:"Escolher 3 projetos: academia + SQL/finanças + 1 novo."},
-    {id:"f4b",desc:"Cada um: problema → o que fiz → o que descobri."},
-    {id:"f4c",desc:"Publicar num lugar acessível do celular."},
-    {id:"f4d",desc:"1 dashboard interativo + 1 análise exploratória. Conhecer Power BI."},
-    {id:"f4e",desc:"Documentar como usou IA no processo.",deliver:"Mostra fluência em IA"}
-   ]},
+   intro:"Aqui a vaga se decide. O <b>dashboard da academia</b> já é um estudo de caso de júnior."},
   {num:"05",title:"Preparação para vagas",when:"Meses 8–12",
-   intro:"Com portfólio na mão, se posicionar. Você se candidata <b>antes</b> de se sentir pronto.",
-   items:[
-    {id:"f5a",desc:"Currículo focado em projetos e resultados."},
-    {id:"f5b",desc:"LinkedIn com palavras-chave: SQL, Python, dados."},
-    {id:"f5c",desc:"Treinar SQL ao vivo (cronometrado)."},
-    {id:"f5d",desc:"Defender cada projeto (storytelling)."},
-    {id:"f5e",desc:"Começar a se candidatar de verdade.",deliver:"O ponto de virada"}
-   ]}
+   intro:"Com portfólio na mão, se posicionar. Você se candidata <b>antes</b> de se sentir pronto."}
 ];
-const allItems = plan.flatMap(p=>p.items.map(i=>i.id));
+
+/* Tópicos sugeridos por fase (aparecem no botão "Trazer tópicos sugeridos").
+   São só um ponto de partida — depois você edita, apaga e cria os seus. */
+const defaultTopics = {
+  1:[ "Fundamentos: SELECT, FROM, WHERE",
+      "Agregar: COUNT, SUM, AVG, GROUP BY",
+      "Filtrar grupos: HAVING, apelidos e expressões",
+      "JOIN — juntar transações, contas e categorias",
+      "Subconsultas e CTEs (WITH)",
+      "Funções de janela (soma acumulada, média móvel)" ],
+  2:[ "Rodar o primeiro notebook no Colab",
+      "Abrir um CSV com pandas (head, info, describe)",
+      "Limpar dados: faltantes, tipos, datas",
+      "Agrupar com groupby",
+      "Primeiro gráfico (matplotlib / seaborn)",
+      "Mini-projeto: análise da academia em pandas" ],
+  3:[ "Estatística descritiva: média, mediana, desvio, distribuições",
+      "Inferência: p-valor e intervalo de confiança",
+      "Escolher o teste: t, qui-quadrado, correlação",
+      "Teste A/B",
+      "Correlação ≠ causalidade" ],
+  4:[ "Escolher 3 projetos do portfólio",
+      "Cada projeto: problema → o que fiz → o que descobri",
+      "Publicar num lugar acessível pelo celular",
+      "1 dashboard interativo + 1 análise exploratória (Power BI)",
+      "Documentar como usei IA no processo" ],
+  5:[ "Currículo focado em projetos e resultados",
+      "LinkedIn com palavras-chave: SQL, Python, dados",
+      "Treinar SQL ao vivo (cronometrado)",
+      "Defender cada projeto (storytelling)",
+      "Começar a se candidatar de verdade" ]
+};
+
 const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
 
-let supa=null, user=null, progress={};
+let supa=null, user=null;
 const $=id=>document.getElementById(id);
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600);}
 
@@ -320,8 +351,8 @@ $('loginBtn')?.addEventListener('click', async ()=>{
 async function enterApp(u){
   user=u; $('gate').style.display='none'; $('app').style.display='block';
   $('userEmail').textContent=u.email;
-  renderPhases();
-  await Promise.all([loadProgress(), loadLinks(), loadDiary()]);
+  setupPlanoEvents();
+  await Promise.all([loadPlano(), loadLinks(), loadDiary()]);
   const d=new Date(); $('dyDate').value=d.toISOString().slice(0,10);
 }
 
@@ -337,49 +368,270 @@ document.querySelectorAll('nav.tabs button').forEach(b=>{
   });
 });
 
-/* ---------- PLANO ---------- */
-function renderPhases(){
+/* ============================================================
+   PLANO — tópicos e subtópicos editáveis
+   ============================================================ */
+let topics=[];              /* [{id,fase,titulo,ordem}] */
+let subsByTopic={};         /* { topico_id: [ {id,topico_id,titulo,observacao,concluido,ordem} ] } */
+let openPhases=new Set([1]);/* fases abertas (fase 1 abre por padrão) */
+let openTopics=new Set();   /* ids de tópicos abertos */
+
+async function loadPlano(){
+  try{
+    const [t,s]=await Promise.all([
+      supa.from('estudo_topicos').select('*').eq('user_id',user.id).order('fase').order('ordem'),
+      supa.from('estudo_subtopicos').select('*').eq('user_id',user.id).order('ordem')
+    ]);
+    topics = t.data||[];
+    subsByTopic={};
+    (s.data||[]).forEach(r=>{ (subsByTopic[r.topico_id]=subsByTopic[r.topico_id]||[]).push(r); });
+  }catch(e){ topics=[]; subsByTopic={}; }
+  renderPlano();
+}
+
+function phaseStats(fase){
+  let done=0,total=0;
+  topics.filter(t=>t.fase===fase).forEach(t=>{
+    (subsByTopic[t.id]||[]).forEach(s=>{ total++; if(s.concluido) done++; });
+  });
+  return {done,total};
+}
+function topicStats(id){
+  const arr=subsByTopic[id]||[];
+  return {done:arr.filter(s=>s.concluido).length, total:arr.length};
+}
+
+function renderPlano(){
+  /* medidor geral */
+  let od=0,ot=0;
+  plan.forEach(p=>{ const st=phaseStats(+p.num); od+=st.done; ot+=st.total; });
+  const pct=ot?Math.round(od/ot*100):0;
+  $('pct').textContent=pct+'%'; $('barfill').style.width=pct+'%';
+  $('count').textContent = ot ? `${od} de ${ot} subtópicos concluídos`
+                              : 'Adicione subtópicos aos seus tópicos para medir o progresso';
+
   const el=$('phases'); el.innerHTML='';
-  plan.forEach((p,idx)=>{
+  plan.forEach(p=>{
+    const fase=+p.num;
+    const st=phaseStats(fase);
+    const myTopics=topics.filter(t=>t.fase===fase);
     const div=document.createElement('div');
-    div.className='phase'+(idx===0?' open':'');
-    const items=p.items.map(it=>`
-      <div class="item" data-id="${it.id}">
-        <div class="box">${CHECK}</div>
-        <div class="item-text">${it.wk?`<span class="wk">${it.wk}</span>`:''}<span class="desc">${it.desc}</span>${it.deliver?`<span class="deliver"><b>Entrega:</b> ${it.deliver}</span>`:''}</div>
-      </div>`).join('');
+    div.className='phase'+(openPhases.has(fase)?' open':'');
+
+    const topicsHtml = myTopics.length
+      ? myTopics.map((t,i)=>renderTopic(t,i,myTopics.length)).join('')
+      : `<p class="topics-empty">Nenhum tópico ainda nesta fase. Traga os sugeridos ou crie o seu.</p>`;
+
+    const seedBtn = myTopics.length===0
+      ? `<button class="mini-btn seed" data-seed="${fase}">✨ Trazer tópicos sugeridos</button>` : '';
+
     div.innerHTML=`
       <button class="phase-head">
         <span class="phase-num">${p.num}</span>
         <span class="phase-meta"><span class="phase-title">${p.title}</span><span class="phase-when">${p.when}</span></span>
-        <span class="phase-prog" data-prog="${p.num}">0/${p.items.length}</span>
+        <span class="phase-prog">${st.total?`${st.done}/${st.total}`:''}</span>
         <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
-      <div class="phase-body"><p class="phase-intro">${p.intro}</p>${p.tip?`<div class="tip">${p.tip}</div>`:''}${items}</div>`;
+      <div class="phase-body">
+        <p class="phase-intro">${p.intro}</p>
+        ${p.tip?`<div class="tip">${p.tip}</div>`:''}
+        <div class="topics">${topicsHtml}</div>
+        <div class="phase-actions">
+          <button class="mini-btn" data-addtopic="${fase}">+ Adicionar tópico</button>
+          ${seedBtn}
+        </div>
+      </div>`;
     el.appendChild(div);
-    div.querySelector('.phase-head').addEventListener('click',()=>div.classList.toggle('open'));
+
+    div.querySelector('.phase-head').addEventListener('click',()=>{
+      const isOpen=div.classList.toggle('open');
+      if(isOpen) openPhases.add(fase); else openPhases.delete(fase);
+    });
   });
-  el.querySelectorAll('.item').forEach(it=>{
-    it.addEventListener('click',()=>toggleItem(it.dataset.id,it));
+}
+
+function renderTopic(t,idx,count){
+  const st=topicStats(t.id);
+  const pct=st.total?Math.round(st.done/st.total*100):0;
+  const subs=subsByTopic[t.id]||[];
+  const subsHtml=subs.map((s,i)=>renderSub(s,i,subs.length)).join('');
+  const frac = st.total
+    ? `<span class="topic-frac">${st.done}/${st.total}</span>`
+    : `<span class="topic-frac zero">sem subtópicos</span>`;
+  return `
+   <div class="topic${openTopics.has(t.id)?' open':''}" data-topic="${t.id}">
+     <div class="topic-head">
+       <button class="topic-toggle">
+         <svg class="tw-chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+         <span class="topic-title">${esc(t.titulo)}</span>
+       </button>
+       ${frac}
+       <span class="tmenu">
+         <button class="icon-btn" data-mvtopic="${t.id}" data-dir="up" ${idx===0?'disabled style="opacity:.25"':''}>↑</button>
+         <button class="icon-btn" data-mvtopic="${t.id}" data-dir="down" ${idx===count-1?'disabled style="opacity:.25"':''}>↓</button>
+         <button class="icon-btn" data-edtopic="${t.id}">✎</button>
+         <button class="icon-btn danger" data-deltopic="${t.id}">🗑</button>
+       </span>
+     </div>
+     ${st.total?`<div class="tbar"><div class="tbar-fill" style="width:${pct}%"></div></div>`:''}
+     <div class="subs">
+       ${subsHtml}
+       <button class="add-sub" data-addsub="${t.id}">+ adicionar subtópico</button>
+     </div>
+   </div>`;
+}
+
+function renderSub(s,idx,count){
+  const hasObs=!!(s.observacao&&s.observacao.trim());
+  return `
+   <div class="sub${s.concluido?' done':''}" data-sub="${s.id}">
+     <button class="sub-box" data-togglesub="${s.id}">${CHECK}</button>
+     <div class="sub-main">
+       <div class="sub-title">${esc(s.titulo)}</div>
+       <div class="sub-tools">
+         <button class="obs-btn" data-obs="${s.id}">${hasObs?'✎ observação':'+ observação'}</button>
+         <button class="icon-btn" data-mvsub="${s.id}" data-dir="up" ${idx===0?'disabled style="opacity:.25"':''}>↑</button>
+         <button class="icon-btn" data-mvsub="${s.id}" data-dir="down" ${idx===count-1?'disabled style="opacity:.25"':''}>↓</button>
+         <button class="icon-btn danger" data-delsub="${s.id}">🗑</button>
+       </div>
+       ${hasObs?`<div class="obs-preview" data-obsprev="${s.id}">${esc(s.observacao)}</div>`:''}
+       <div class="obs-wrap" data-obswrap="${s.id}">
+         <textarea data-obsinput="${s.id}" placeholder="Anote dúvidas, o que travou, exemplos, páginas do material…">${esc(s.observacao||'')}</textarea>
+       </div>
+     </div>
+   </div>`;
+}
+
+/* eventos (delegação — registrada uma única vez) */
+let planoWired=false;
+function setupPlanoEvents(){
+  if(planoWired) return; planoWired=true;
+  const root=$('phases');
+  root.addEventListener('click', async (ev)=>{
+    const el=ev.target.closest('button'); if(!el) return;
+    if(el.classList.contains('topic-toggle')){
+      const tp=el.closest('.topic'); const id=tp.dataset.topic;
+      const nowOpen=tp.classList.toggle('open');
+      if(nowOpen) openTopics.add(id); else openTopics.delete(id);
+      return;
+    }
+    const d=el.dataset;
+    if(d.seed!==undefined)          await seedPhase(+d.seed);
+    else if(d.addtopic!==undefined) await addTopic(+d.addtopic);
+    else if(d.edtopic!==undefined)  await renameTopic(d.edtopic);
+    else if(d.deltopic!==undefined) await delTopic(d.deltopic);
+    else if(d.mvtopic!==undefined)  await moveTopic(d.mvtopic,d.dir);
+    else if(d.addsub!==undefined)   await addSub(d.addsub);
+    else if(d.togglesub!==undefined)await toggleSub(d.togglesub);
+    else if(d.delsub!==undefined)   await delSub(d.delsub);
+    else if(d.mvsub!==undefined)    await moveSub(d.mvsub,d.dir);
+    else if(d.obs!==undefined)      toggleObs(d.obs);
+  });
+  /* salva a observação ao sair do campo de texto */
+  root.addEventListener('focusout', async (ev)=>{
+    const ta=ev.target.closest('textarea[data-obsinput]'); if(!ta) return;
+    await saveObs(ta.dataset.obsinput, ta.value);
   });
 }
-async function loadProgress(){
-  try{
-    const {data}=await supa.from('estudo_progresso').select('item_id,done').eq('user_id',user.id);
-    progress={}; (data||[]).forEach(r=>progress[r.item_id]=r.done);
-  }catch(e){}
-  paintProgress();
+
+/* ----- tópicos ----- */
+async function seedPhase(fase){
+  const defs=defaultTopics[fase]||[]; if(!defs.length) return;
+  const rows=defs.map((titulo,i)=>({user_id:user.id,fase,titulo,ordem:i}));
+  try{ await supa.from('estudo_topicos').insert(rows); toast('Tópicos sugeridos adicionados'); await loadPlano(); }
+  catch(e){ toast('Erro ao adicionar'); }
 }
-function paintProgress(){
-  document.querySelectorAll('.item').forEach(el=>el.classList.toggle('done',!!progress[el.dataset.id]));
-  const done=allItems.filter(id=>progress[id]).length, total=allItems.length, pct=Math.round(done/total*100);
-  $('pct').textContent=pct+'%'; $('barfill').style.width=pct+'%'; $('count').textContent=`${done} de ${total} etapas concluídas`;
-  plan.forEach(p=>{const d=p.items.filter(i=>progress[i.id]).length;const e=document.querySelector(`[data-prog="${p.num}"]`);if(e)e.textContent=`${d}/${p.items.length}`;});
+async function addTopic(fase){
+  const titulo=(prompt('Nome do novo tópico:')||'').trim(); if(!titulo) return;
+  const ordem=Math.max(-1,...topics.filter(t=>t.fase===fase).map(t=>t.ordem))+1;
+  try{ await supa.from('estudo_topicos').insert({user_id:user.id,fase,titulo,ordem}); toast('Tópico criado'); await loadPlano(); }
+  catch(e){ toast('Erro ao criar'); }
 }
-async function toggleItem(id,el){
-  const val=!progress[id]; progress[id]=val; el.classList.toggle('done',val); paintProgress();
-  try{ await supa.from('estudo_progresso').upsert({user_id:user.id,item_id:id,done:val,updated_at:new Date().toISOString()},{onConflict:'user_id,item_id'}); }
+async function renameTopic(id){
+  const t=topics.find(x=>x.id===id); if(!t) return;
+  const titulo=(prompt('Editar nome do tópico:',t.titulo)||'').trim();
+  if(!titulo||titulo===t.titulo) return;
+  try{ await supa.from('estudo_topicos').update({titulo}).eq('id',id); await loadPlano(); }
   catch(e){ toast('Erro ao salvar'); }
+}
+async function delTopic(id){
+  const st=topicStats(id);
+  const msg=st.total?`Excluir este tópico e seus ${st.total} subtópico(s)?`:'Excluir este tópico?';
+  if(!confirm(msg)) return;
+  openTopics.delete(id);
+  try{ await supa.from('estudo_topicos').delete().eq('id',id); toast('Tópico excluído'); await loadPlano(); }
+  catch(e){ toast('Erro ao excluir'); }
+}
+async function moveTopic(id,dir){
+  const t=topics.find(x=>x.id===id); if(!t) return;
+  const sibs=topics.filter(x=>x.fase===t.fase).sort((a,b)=>a.ordem-b.ordem);
+  const i=sibs.findIndex(x=>x.id===id); const j=dir==='up'?i-1:i+1;
+  if(j<0||j>=sibs.length) return;
+  const a=sibs[i], b=sibs[j];
+  try{
+    await Promise.all([
+      supa.from('estudo_topicos').update({ordem:b.ordem}).eq('id',a.id),
+      supa.from('estudo_topicos').update({ordem:a.ordem}).eq('id',b.id)
+    ]);
+    await loadPlano();
+  }catch(e){ toast('Erro ao mover'); }
+}
+
+/* ----- subtópicos ----- */
+async function addSub(topicoId){
+  const titulo=(prompt('Nome do subtópico:')||'').trim(); if(!titulo) return;
+  const arr=subsByTopic[topicoId]||[];
+  const ordem=Math.max(-1,...arr.map(s=>s.ordem))+1;
+  openTopics.add(topicoId);
+  try{ await supa.from('estudo_subtopicos').insert({user_id:user.id,topico_id:topicoId,titulo,ordem}); toast('Subtópico criado'); await loadPlano(); }
+  catch(e){ toast('Erro ao criar'); }
+}
+function findSub(id){
+  for(const k in subsByTopic){ const f=subsByTopic[k].find(s=>s.id===id); if(f) return {sub:f,tid:k}; }
+  return null;
+}
+async function toggleSub(id){
+  const r=findSub(id); if(!r) return;
+  r.sub.concluido=!r.sub.concluido;
+  renderPlano();  /* atualização otimista (sem esperar a rede) */
+  try{ await supa.from('estudo_subtopicos').update({concluido:r.sub.concluido}).eq('id',id); }
+  catch(e){ toast('Erro ao salvar'); r.sub.concluido=!r.sub.concluido; renderPlano(); }
+}
+async function delSub(id){
+  if(!confirm('Excluir este subtópico?')) return;
+  try{ await supa.from('estudo_subtopicos').delete().eq('id',id); toast('Subtópico excluído'); await loadPlano(); }
+  catch(e){ toast('Erro ao excluir'); }
+}
+async function moveSub(id,dir){
+  const r=findSub(id); if(!r) return;
+  const sibs=(subsByTopic[r.tid]||[]).slice().sort((a,b)=>a.ordem-b.ordem);
+  const i=sibs.findIndex(s=>s.id===id); const j=dir==='up'?i-1:i+1;
+  if(j<0||j>=sibs.length) return;
+  const a=sibs[i], b=sibs[j];
+  try{
+    await Promise.all([
+      supa.from('estudo_subtopicos').update({ordem:b.ordem}).eq('id',a.id),
+      supa.from('estudo_subtopicos').update({ordem:a.ordem}).eq('id',b.id)
+    ]);
+    await loadPlano();
+  }catch(e){ toast('Erro ao mover'); }
+}
+function toggleObs(id){
+  const wrap=document.querySelector(`[data-obswrap="${id}"]`); if(!wrap) return;
+  const show=!wrap.classList.contains('show');
+  wrap.classList.toggle('show',show);
+  const prev=document.querySelector(`[data-obsprev="${id}"]`);
+  if(prev) prev.style.display=show?'none':'';
+  if(show){ const ta=wrap.querySelector('textarea'); if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); } }
+}
+async function saveObs(id,val){
+  const r=findSub(id); if(!r) return;
+  val=(val||'').trim();
+  if((r.sub.observacao||'')===val) return; /* nada mudou */
+  r.sub.observacao = val || null;
+  try{ await supa.from('estudo_subtopicos').update({observacao:r.sub.observacao}).eq('id',id); toast('Observação salva'); }
+  catch(e){ toast('Erro ao salvar'); }
+  renderPlano();
 }
 
 /* ---------- MATERIAIS ---------- */
@@ -435,15 +687,30 @@ async function delEntry(id){ if(!confirm('Excluir esta entrada?'))return; try{ a
 
 /* ---------- PDF ---------- */
 $('genPdf').addEventListener('click',()=>{
-  const done=allItems.filter(id=>progress[id]).length, total=allItems.length, pct=Math.round(done/total*100);
-  const phaseRows=plan.map(p=>{const d=p.items.filter(i=>progress[i.id]).length;return `<div class="rphase"><b>${p.num}. ${p.title}</b> — ${d}/${p.items.length}</div>`;}).join('');
+  let od=0,ot=0; plan.forEach(p=>{ const s=phaseStats(+p.num); od+=s.done; ot+=s.total; });
+  const pct=ot?Math.round(od/ot*100):0;
+
+  const phaseBlocks=plan.map(p=>{
+    const fase=+p.num; const st=phaseStats(fase);
+    const myTopics=topics.filter(t=>t.fase===fase).sort((a,b)=>a.ordem-b.ordem);
+    if(!myTopics.length) return `<div class="rphaseblock"><div class="rphase"><b>${p.num}. ${p.title}</b> — sem tópicos</div></div>`;
+    const tRows=myTopics.map(t=>{
+      const ts=topicStats(t.id);
+      const subs=(subsByTopic[t.id]||[]).slice().sort((a,b)=>a.ordem-b.ordem);
+      const sRows=subs.map(s=>`<div class="rsub">${s.concluido?'☑':'☐'} ${esc(s.titulo)}${(s.observacao&&s.observacao.trim())?`<div class="robs">↳ ${esc(s.observacao)}</div>`:''}</div>`).join('');
+      return `<div class="rtopic"><b>${esc(t.titulo)}</b> — ${ts.total?`${ts.done}/${ts.total}`:'sem subtópicos'}${sRows}</div>`;
+    }).join('');
+    return `<div class="rphaseblock"><div class="rphase"><b>${p.num}. ${p.title}</b> — ${st.total?`${st.done}/${st.total} subtópicos`:'—'}</div>${tRows}</div>`;
+  }).join('');
+
   const entries=diaryCache.length?diaryCache.map(d=>`<div class="rentry"><div class="rd">${fmtDate(d.data)}</div><div class="rb">${esc(d.corpo)}</div></div>`).join(''):'<p style="font-size:13px;color:#888">Sem entradas no diário ainda.</p>';
+
   $('printReport').innerHTML=`
     <div class="report-head">
       <h2>Relatório de Estudos — Danilo</h2>
-      <div class="rmeta">Gerado em ${fmtDate(new Date().toISOString().slice(0,10))} · Progresso geral: ${pct}% (${done}/${total})</div>
+      <div class="rmeta">Gerado em ${fmtDate(new Date().toISOString().slice(0,10))} · Progresso geral: ${pct}% (${od}/${ot})</div>
     </div>
-    <div class="report-block"><h3>Progresso por fase</h3>${phaseRows}</div>
+    <div class="report-block"><h3>Progresso por fase, tópico e subtópico</h3>${phaseBlocks}</div>
     <div class="report-block"><h3>Diário de estudo</h3>${entries}</div>`;
   setTimeout(()=>window.print(),80);
 });
