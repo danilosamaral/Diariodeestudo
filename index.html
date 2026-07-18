@@ -266,6 +266,12 @@
 <div class="toast" id="toast"></div>
 
 <script>
+/* Data de HOJE no fuso local (evita o bug de "virar o dia" à noite,
+   que acontecia porque toISOString() usa UTC). */
+function hojeLocal(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
 /* ============================================================
    CONFIG — preencha depois de criar o projeto no Supabase.
    Pegue em: Supabase → Project Settings → API
@@ -353,7 +359,7 @@ async function enterApp(u){
   $('userEmail').textContent=u.email;
   setupPlanoEvents();
   await Promise.all([loadPlano(), loadLinks(), loadDiary()]);
-  const d=new Date(); $('dyDate').value=d.toISOString().slice(0,10);
+  $('dyDate').value=hojeLocal();
 }
 
 $('signout')?.addEventListener('click', async ()=>{ await supa.auth.signOut(); location.reload(); });
@@ -679,7 +685,7 @@ $('dyAdd').addEventListener('click', async ()=>{
   const data=$('dyDate').value, corpo=$('dyBody').value.trim();
   if(!corpo){ toast('Escreva algo antes de salvar'); return; }
   try{
-    await supa.from('estudo_diario').insert({user_id:user.id,data:data||new Date().toISOString().slice(0,10),corpo});
+    await supa.from('estudo_diario').insert({user_id:user.id,data:data||hojeLocal(),corpo});
     $('dyBody').value=''; toast('Entrada salva'); loadDiary();
   }catch(e){ toast('Erro ao salvar'); }
 });
@@ -708,7 +714,7 @@ $('genPdf').addEventListener('click',()=>{
   $('printReport').innerHTML=`
     <div class="report-head">
       <h2>Relatório de Estudos — Danilo</h2>
-      <div class="rmeta">Gerado em ${fmtDate(new Date().toISOString().slice(0,10))} · Progresso geral: ${pct}% (${od}/${ot})</div>
+      <div class="rmeta">Gerado em ${fmtDate(hojeLocal())} · Progresso geral: ${pct}% (${od}/${ot})</div>
     </div>
     <div class="report-block"><h3>Progresso por fase, tópico e subtópico</h3>${phaseBlocks}</div>
     <div class="report-block"><h3>Diário de estudo</h3>${entries}</div>`;
