@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hub de Estudos · Dados</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --paper:#F7F3EC; --ink:#1C1E26; --honey:#D98C2B; --slate:#2E4756;
+    --sage:#5A8F69; --line:#E2DACE; --muted:#6C6A63; --card:#FFFFFF; --tomato:#C05A42;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{-webkit-text-size-adjust:100%;}
+  body{background:var(--paper);color:var(--ink);font-family:'Inter',system-ui,sans-serif;line-height:1.55;font-size:16px;}
+  .wrap{max-width:680px;margin:0 auto;padding:0 18px;}
+  button{font-family:inherit;cursor:pointer;}
+  a{color:var(--slate);}
+
+  /* ---------- cabeçalho ---------- */
+  header{background:var(--slate);color:#F7F3EC;padding:22px 0 16px;border-bottom:3px solid var(--honey);}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--honey);font-weight:700;}
+  h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:26px;line-height:1.08;margin:6px 0 4px;letter-spacing:-.01em;}
+  .sub{font-size:13px;color:#C9D3D8;}
+  .whoami{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:12px;color:#A9B6BC;font-family:'JetBrains Mono',monospace;}
+  .signout{background:rgba(255,255,255,.12);border:none;color:#F7F3EC;font-size:11px;padding:6px 12px;border-radius:8px;font-family:'JetBrains Mono',monospace;}
+
+  /* ---------- abas ---------- */
+  nav.tabs{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:1px solid var(--line);display:flex;overflow-x:auto;}
+  nav.tabs button{flex:1;min-width:80px;background:none;border:none;padding:13px 6px 11px;font-size:13.5px;font-weight:600;color:var(--muted);border-bottom:2.5px solid transparent;white-space:nowrap;}
+  nav.tabs button.active{color:var(--slate);border-bottom-color:var(--honey);}
+
+  main{padding:18px 0 90px;}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  /* ---------- medidor de progresso ---------- */
+  .meter{background:var(--slate);color:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px;}
+  .meter-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px;}
+  .meter-label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#C9D3D8;}
+  .pct{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:24px;}
+  .bar{height:9px;background:rgba(255,255,255,.16);border-radius:99px;overflow:hidden;}
+  .bar-fill{height:100%;width:0;background:linear-gradient(90deg,var(--honey),#F0B868);border-radius:99px;transition:width .5s ease;}
+  .meter-note{font-size:11px;color:#A9B6BC;margin-top:8px;font-family:'JetBrains Mono',monospace;}
+  .meter-foco{font-size:12.5px;color:#DCE5E9;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.14);}
+  .meter-foco b{color:#fff;font-weight:600;}
+
+  /* ---------- trilhas ---------- */
+  .trilha{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:12px;overflow:hidden;}
+  .trilha.st-ativa{border-color:#E8C79A;box-shadow:0 1px 0 #F0DDBE;}
+  .trilha-head{width:100%;text-align:left;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;}
+  .trilha-num{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;background:var(--paper);color:var(--slate);border:1px solid var(--line);width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:none;}
+  .trilha.st-ativa .trilha-num{background:var(--honey);color:#fff;border-color:var(--honey);}
+  .trilha-meta{flex:1;min-width:0;}
+  .trilha-title{font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:16px;line-height:1.2;}
+  .trilha-when{font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .trilha-prog{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--sage);font-weight:700;flex:none;}
+  .trilha-prog.zero{color:var(--muted);}
+  .chevron{flex:none;transition:transform .25s ease;color:var(--muted);}
+  .trilha.open .chevron{transform:rotate(180deg);}
+  .trilha-body{display:none;padding:0 16px 6px;border-top:1px solid var(--line);}
+  .trilha.open .trilha-body{display:block;}
+  .trilha-intro{font-size:13px;color:#3a3c44;padding:12px 0 4px;}
+
+  /* etiquetas de status */
+  .badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:99px;}
+  .b-ativa{background:#FBF0DE;color:#96631a;}
+  .b-pausada{background:#F3E9E6;color:#9c5140;}
+  .b-futura{background:#EDEBE6;color:#6C6A63;}
+  .b-concluida{background:#E7F0EA;color:#3f7554;}
+
+  code{font-family:'JetBrains Mono',monospace;font-size:.85em;background:var(--paper);border:1px solid var(--line);padding:1px 5px;border-radius:5px;}
+  .tip{background:#FBF4E8;border:1px solid #F0DDBE;border-radius:11px;padding:11px 13px;margin:6px 0 12px;font-size:12.5px;color:#6b5526;}
+  .tip b{color:#946315;}
+
+  /* ---------- tópicos ---------- */
+  .topics{border-top:1px solid var(--line);margin-top:6px;}
+  .topic{border-top:1px solid var(--line);padding:11px 0 9px;}
+  .topic:first-child{border-top:none;}
+  .topic-head{display:flex;align-items:flex-start;gap:6px;}
+  .topic-toggle{flex:1;min-width:0;display:flex;align-items:flex-start;gap:9px;background:none;border:none;text-align:left;padding:2px 0;}
+  .tw-chev{flex:none;margin-top:2px;color:var(--muted);transition:transform .2s ease;}
+  .topic.open .tw-chev{transform:rotate(90deg);}
+  .topic-title{font-weight:600;font-size:14.5px;color:var(--ink);line-height:1.25;}
+  .topic-obj{font-size:12px;color:var(--muted);line-height:1.4;margin-top:3px;}
+  .topic-frac{flex:none;font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700;color:var(--sage);white-space:nowrap;margin-top:3px;}
+  .topic-frac.zero{color:var(--muted);font-weight:600;}
+  .tbar{height:5px;background:var(--line);border-radius:99px;overflow:hidden;margin:8px 0 2px;}
+  .tbar-fill{height:100%;width:0;background:var(--sage);border-radius:99px;transition:width .4s ease;}
+  .tmenu{display:flex;gap:1px;flex:none;}
+  .icon-btn{background:none;border:none;color:var(--muted);padding:6px 5px;border-radius:7px;display:inline-flex;align-items:center;font-family:inherit;font-size:14px;line-height:1;}
+  .icon-btn:active{background:var(--paper);}
+  .icon-btn.danger{color:var(--tomato);}
+
+  /* ---------- subtópicos ---------- */
+  .subs{display:none;padding:8px 0 2px 4px;}
+  .topic.open .subs{display:block;}
+  .sub{display:flex;gap:9px;align-items:flex-start;padding:10px 0;border-top:1px dashed var(--line);}
+  .sub:first-child{border-top:none;}
+  .sub-box{flex:none;width:20px;height:20px;border-radius:6px;border:2px solid #C9C2B5;background:#fff;margin-top:1px;padding:0;display:flex;align-items:center;justify-content:center;transition:all .15s ease;}
+  .sub-box svg{width:12px;height:12px;opacity:0;transform:scale(.6);transition:all .15s ease;}
+  .sub.st-concluido .sub-box{background:var(--sage);border-color:var(--sage);}
+  .sub.st-concluido .sub-box svg{opacity:1;transform:scale(1);}
+  .sub.st-em_andamento .sub-box{border-color:var(--honey);background:#FDF6EA;}
+  .sub.st-travado .sub-box{border-color:var(--tomato);background:#FBEDEA;}
+  .sub-main{flex:1;min-width:0;}
+  .sub-title{font-size:13.5px;color:#3a3c44;line-height:1.35;}
+  .sub.st-concluido .sub-title{color:var(--muted);text-decoration:line-through;text-decoration-color:#C9C2B5;}
+  .sub-ref{font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:3px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+  .tipo-chip{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:99px;background:var(--paper);border:1px solid var(--line);color:var(--muted);}
+  .flag-line{font-size:11.5px;font-weight:600;font-family:'JetBrains Mono',monospace;margin-top:4px;}
+  .flag-line.f-em_andamento{color:#946315;}
+  .flag-line.f-travado{color:var(--tomato);}
+
+  /* confiança */
+  .conf{display:flex;align-items:center;gap:7px;margin-top:6px;}
+  .conf-label{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+  .conf-dots{display:flex;gap:4px;}
+  .conf-dot{width:15px;height:15px;border-radius:50%;border:1.5px solid #C9C2B5;background:#fff;padding:0;}
+  .conf-dot.on{background:var(--sage);border-color:var(--sage);}
+
+  .sub-tools{display:flex;gap:1px;align-items:center;margin-top:5px;flex-wrap:wrap;}
+  .sub-tools .obs-btn{font-size:11.5px;font-weight:600;color:var(--slate);padding:4px 7px;border-radius:7px;background:none;border:none;font-family:inherit;margin-right:auto;}
+  .obs-preview{font-size:12.5px;color:#5a5750;background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--honey);border-radius:8px;padding:8px 10px;margin-top:7px;white-space:pre-wrap;line-height:1.5;}
+
+  /* painel de detalhes do subtópico */
+  .det{display:none;margin-top:8px;background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:11px 12px;}
+  .det.show{display:block;}
+  .det .field{margin-bottom:8px;}
+  .det .field:last-of-type{margin-bottom:10px;}
+  .det label{font-size:11px;}
+  .det input,.det select,.det textarea{font-size:14px;padding:9px 10px;}
+  .det textarea{min-height:66px;}
+  .det-row{display:flex;gap:8px;}
+  .det-row .field{flex:1;}
+
+  .add-sub{background:none;border:1px dashed var(--line);color:var(--slate);font-size:12.5px;font-weight:600;padding:8px 12px;border-radius:9px;margin:6px 0 2px;font-family:inherit;}
+  .trilha-actions{display:flex;gap:8px;flex-wrap:wrap;padding:12px 0 14px;}
+  .mini-btn{background:none;border:1px dashed var(--line);color:var(--slate);font-size:12.5px;font-weight:600;padding:9px 13px;border-radius:9px;font-family:inherit;}
+  .topics-empty{font-size:12.5px;color:var(--muted);padding:10px 0 2px;}
+
+  /* ---------- títulos de seção e formulários ---------- */
+  .section-eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:2px 0 12px;font-weight:700;}
+  .lead{font-size:13.5px;color:#3a3c44;margin-bottom:16px;}
+  .field{margin-bottom:10px;}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:600;}
+  input[type=text],input[type=url],input[type=email],input[type=date],input[type=number],textarea,select{
+    width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font-family:inherit;font-size:15px;color:var(--ink);
+  }
+  textarea{resize:vertical;min-height:120px;line-height:1.5;}
+  .btn{background:var(--slate);color:#fff;border:none;border-radius:10px;padding:12px 18px;font-size:14px;font-weight:600;}
+  .btn.honey{background:var(--honey);}
+  .btn.ghost{background:none;border:1px solid var(--line);color:var(--muted);}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .row2{display:flex;gap:8px;}
+  .row2 .field{flex:1;}
+
+  /* ---------- biblioteca ---------- */
+  .grp-title{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:18px 0 8px;display:flex;align-items:center;gap:8px;}
+  .grp-title:after{content:'';flex:1;height:1px;background:var(--line);}
+  .rescard{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px 14px;margin-bottom:10px;}
+  .rescard.ativo{border-color:#E8C79A;}
+  .res-top{display:flex;align-items:flex-start;gap:8px;}
+  .res-main{flex:1;min-width:0;}
+  .res-tipo{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:99px;font-family:'JetBrains Mono',monospace;margin-bottom:5px;}
+  .t-livro_fisico{background:#F3E9E6;color:#9c5140;}
+  .t-livro_digital{background:#F3E9E6;color:#9c5140;}
+  .t-curso_video{background:#E7F0EA;color:#3f7554;}
+  .t-pdf,.t-artigo,.t-video{background:#EAEFF2;color:#33566a;}
+  .t-ferramenta{background:#FBF0DE;color:#96631a;}
+  .t-app_proprio{background:#EAEFF2;color:#33566a;}
+  .rescard h4{font-family:'Bricolage Grotesque',sans-serif;font-size:15.5px;font-weight:600;line-height:1.2;}
+  .rescard h4 a{color:var(--ink);text-decoration:none;}
+  .res-autor{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .res-loc{font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:4px;word-break:break-all;}
+  .res-nota{font-size:12.5px;color:#5a5750;background:var(--paper);border-left:3px solid var(--line);border-radius:0 8px 8px 0;padding:7px 10px;margin-top:8px;line-height:1.5;}
+  .res-prog{display:flex;align-items:center;gap:9px;margin-top:10px;}
+  .res-prog .pbar{flex:1;height:6px;background:var(--line);border-radius:99px;overflow:hidden;}
+  .res-prog .pbar i{display:block;height:100%;background:var(--sage);border-radius:99px;transition:width .4s ease;}
+  .res-prog .pnum{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700;color:var(--muted);white-space:nowrap;}
+  .step{background:#fff;border:1px solid var(--line);color:var(--slate);width:28px;height:28px;border-radius:8px;font-size:16px;font-weight:600;line-height:1;flex:none;}
+  .step:active{background:var(--paper);}
+
+  /* ---------- diário ---------- */
+  .entry{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:14px 15px;margin-bottom:11px;}
+  .entry .edate{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--honey);margin-bottom:6px;display:flex;justify-content:space-between;}
+  .entry .edate .del{background:none;border:none;color:var(--tomato);font-size:11px;font-weight:600;}
+  .entry .body{font-size:14px;color:#2f313a;white-space:pre-wrap;line-height:1.6;}
+
+  .empty{text-align:center;color:var(--muted);font-size:13px;padding:24px 10px;border:1px dashed var(--line);border-radius:13px;}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-size:13px;padding:10px 18px;border-radius:99px;opacity:0;transition:all .3s;z-index:60;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* ---------- porta de entrada ---------- */
+  #gate{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .gatebox{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px 22px;max-width:400px;width:100%;text-align:center;}
+  .gatebox h2{font-family:'Bricolage Grotesque',sans-serif;font-size:22px;margin-bottom:6px;}
+  .gatebox p{font-size:13.5px;color:var(--muted);margin-bottom:18px;}
+  .config-warn{background:#FDECEA;border:1px solid #F5C6BE;color:#9c3b2a;border-radius:12px;padding:14px;font-size:13px;margin:20px 0;text-align:left;}
+
+  /* ---------- relatório em PDF ---------- */
+  #printReport{display:none;}
+  .report-head h2{font-family:'Bricolage Grotesque',sans-serif;font-size:22px;}
+  .report-head .rmeta{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);margin:4px 0 16px;}
+  .report-block{margin-bottom:18px;}
+  .report-block h3{font-size:15px;font-family:'Bricolage Grotesque',sans-serif;border-bottom:2px solid var(--honey);padding-bottom:4px;margin-bottom:8px;}
+  .rtrilha{font-size:13px;margin:9px 0 3px;}
+  .rtopic{font-size:12.5px;margin:5px 0 4px 12px;}
+  .rsub{font-size:12px;margin:2px 0 2px 22px;color:#333;}
+  .robs{font-size:11px;color:#666;margin:1px 0 4px 16px;font-style:italic;}
+  .rres{font-size:12px;margin:3px 0;}
+  .rentry{margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line);}
+  .rentry .rd{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--slate);}
+  .rentry .rb{font-size:13px;white-space:pre-wrap;margin-top:3px;}
+
+  @media print{
+    nav.tabs,header,main,.toast{display:none!important;}
+    body{background:#fff;}
+    #printReport{display:block!important;padding:0;}
+    .wrap{max-width:none;padding:0;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+</head>
+<body>
+
+<!-- ============ PORTA DE ENTRADA ============ -->
+<div id="gate">
+  <div class="gatebox">
+    <div class="eyebrow" style="color:var(--honey)">Hub de Estudos · Dados</div>
+    <h2>Seus estudos, num lugar só</h2>
+    <p>Entre com seu e-mail. Enviamos um link mágico — sem senha.</p>
+    <div id="configWarn" class="config-warn" style="display:none">
+      <b>Falta configurar o Supabase.</b> Preencha <code>URL</code> e <code>anon key</code> no bloco <code>CONFIG</code> e recarregue.
+    </div>
+    <div id="loginForm">
+      <div class="field"><input type="email" id="email" placeholder="voce@email.com" autocomplete="email" /></div>
+      <button class="btn honey" id="loginBtn" style="width:100%">Enviar link de acesso</button>
+      <p id="loginMsg" style="margin:14px 0 0;font-size:12.5px;color:var(--sage);min-height:16px"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" style="display:none">
+  <header>
+    <div class="wrap">
+      <div class="eyebrow">Hub de Estudos</div>
+      <h1>Economia &rarr; Analista de Dados</h1>
+      <div class="sub">Danilo &middot; 10h/semana &middot; meta 9&ndash;14 meses</div>
+      <div class="whoami"><span id="userEmail"></span><button class="signout" id="signout">sair</button></div>
+    </div>
+  </header>
+
+  <nav class="tabs wrap" style="max-width:680px">
+    <button data-tab="plano" class="active">Plano</button>
+    <button data-tab="biblioteca">Biblioteca</button>
+    <button data-tab="diario">Di&aacute;rio</button>
+    <button data-tab="pdf">PDF</button>
+  </nav>
+
+  <main class="wrap">
+
+    <!-- ---------- PLANO ---------- -->
+    <section class="tab-panel active" id="tab-plano">
+      <div class="meter">
+        <div class="meter-top"><span class="meter-label">Trilha ativa</span><span class="pct" id="pct">0%</span></div>
+        <div class="bar"><div class="bar-fill" id="barfill"></div></div>
+        <div class="meter-note" id="count">carregando&hellip;</div>
+        <div class="meter-foco" id="foco"></div>
+      </div>
+      <div id="trilhas"></div>
+    </section>
+
+    <!-- ---------- BIBLIOTECA ---------- -->
+    <section class="tab-panel" id="tab-biblioteca">
+      <div class="section-eyebrow">Biblioteca</div>
+      <p class="lead">Tudo que te ensina: <b>livro de papel</b>, curso, PDF, ferramenta. Livro f&iacute;sico n&atilde;o precisa de link &mdash; e d&aacute; para marcar em que cap&iacute;tulo voc&ecirc; est&aacute;.</p>
+
+      <button class="mini-btn" id="resToggleForm" style="margin-bottom:12px">+ Adicionar material</button>
+
+      <div class="rescard" id="resForm" style="background:#FBFAF6;display:none">
+        <div class="field"><label>T&iacute;tulo</label><input type="text" id="rsTitulo" placeholder="Ex: Introdu&ccedil;&atilde;o &agrave; Programa&ccedil;&atilde;o com Python" /></div>
+        <div class="field"><label>Autor</label><input type="text" id="rsAutor" placeholder="Ex: Nilo Ney Coutinho Menezes" /></div>
+        <div class="row2">
+          <div class="field"><label>Tipo</label>
+            <select id="rsTipo">
+              <option value="livro_fisico">Livro f&iacute;sico</option>
+              <option value="livro_digital">Livro digital</option>
+              <option value="curso_video">Curso em v&iacute;deo</option>
+              <option value="pdf">PDF</option>
+              <option value="artigo">Artigo</option>
+              <option value="video">V&iacute;deo</option>
+              <option value="ferramenta">Ferramenta</option>
+              <option value="app_proprio">App meu</option>
+            </select>
+          </div>
+          <div class="field"><label>Status</label>
+            <select id="rsStatus">
+              <option value="fila">Na fila</option>
+              <option value="ativo">Ativo</option>
+              <option value="pausado">Pausado</option>
+              <option value="concluido">Conclu&iacute;do</option>
+              <option value="arquivado">Arquivado</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label>Link (opcional &mdash; livro de papel n&atilde;o precisa)</label><input type="url" id="rsUrl" placeholder="https://&hellip;" /></div>
+        <div class="row2">
+          <div class="field"><label>Onde est&aacute;</label><input type="text" id="rsLocal" placeholder="estante, Kindle, Drive&hellip;" /></div>
+          <div class="field"><label>Trilha</label><select id="rsTrilha"></select></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Unidade</label>
+            <select id="rsUnidade">
+              <option value="capitulos">Cap&iacute;tulos</option>
+              <option value="paginas">P&aacute;ginas</option>
+              <option value="aulas">Aulas</option>
+              <option value="modulos">M&oacute;dulos</option>
+            </select>
+          </div>
+          <div class="field"><label>Total (opcional)</label><input type="number" id="rsTotal" min="0" placeholder="ex: 11" /></div>
+        </div>
+        <div class="field"><label>Nota</label><textarea id="rsNota" style="min-height:70px" placeholder="Onde parei, o que pular, por que este material&hellip;"></textarea></div>
+        <div class="btn-row">
+          <button class="btn honey" id="rsSalvar">Salvar material</button>
+          <button class="btn ghost" id="rsCancelar">Cancelar</button>
+        </div>
+      </div>
+
+      <div id="resLista" style="margin-top:6px"></div>
+    </section>
+
+    <!-- ---------- DI&Aacute;RIO ---------- -->
+    <section class="tab-panel" id="tab-diario">
+      <div class="section-eyebrow">Di&aacute;rio de estudo</div>
+      <p class="lead">Escreva o que estudou hoje: o que entendeu, onde travou, d&uacute;vidas. &Eacute; isso que vira progresso palp&aacute;vel &mdash; e o que eu leio no PDF pra te orientar.</p>
+      <div class="rescard" style="background:#FBFAF6">
+        <div class="field"><label>Data</label><input type="date" id="dyDate" /></div>
+        <div class="field"><label>O que rolou hoje</label><textarea id="dyBody" placeholder="Hoje fiz os exerc&iacute;cios do cap. 3&hellip; entendi f-strings, mas a convers&atilde;o de tipos ainda confunde&hellip;"></textarea></div>
+        <button class="btn honey" id="dyAdd">Salvar entrada</button>
+      </div>
+      <div id="diaryList" style="margin-top:16px"></div>
+    </section>
+
+    <!-- ---------- PDF ---------- -->
+    <section class="tab-panel" id="tab-pdf">
+      <div class="section-eyebrow">Gerar PDF para o Claude</div>
+      <p class="lead">Monta um relat&oacute;rio com trilhas, progresso, itens travados, biblioteca e o di&aacute;rio. Toque em gerar e, no menu do Safari, escolha <b>Compartilhar &rarr; Imprimir &rarr; salvar como PDF</b>.</p>
+      <button class="btn" id="genPdf" style="width:100%">Gerar relat&oacute;rio e imprimir</button>
+      <p style="font-size:12px;color:var(--muted);margin-top:10px;text-align:center">O relat&oacute;rio aparece s&oacute; na impress&atilde;o &mdash; a tela continua normal.</p>
+    </section>
+
+  </main>
+</div>
+
+<div id="printReport" class="wrap"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   HUB DE ESTUDOS · DADOS — v2 (Etapa 1)
+   Tudo comentado em português. Leia de cima para baixo.
+   ============================================================ */
+
+/* Data de HOJE no fuso local. Nunca use toISOString() para isso:
+   ele usa UTC e, depois das 20h em Ponta Porã (UTC-4), vira o dia. */
+function hojeLocal(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+/* ---------- CONFIG do Supabase ---------- */
+const CONFIG = {
+  url:     "https://nrosywkyjamahgwfzsjg.supabase.co",
+  anonKey: "sb_publishable_NePVZG3IiFnZxvWTrivCdw_6J-Lxp56"
+};
+
+/* ---------- rótulos (traduzem os códigos do banco) ---------- */
+const LB_TRILHA  = {ativa:'ativa', pausada:'pausada', futura:'futura', concluida:'concluída'};
+const LB_TIPO    = {leitura:'leitura', exercicio:'exercício', projeto:'projeto', video:'vídeo', revisao:'revisão'};
+const LB_RES     = {livro_fisico:'Livro físico', livro_digital:'Livro digital', curso_video:'Curso',
+                    pdf:'PDF', artigo:'Artigo', video:'Vídeo', ferramenta:'Ferramenta', app_proprio:'App meu'};
+const LB_STATUS  = {fila:'Na fila', ativo:'Ativo', pausado:'Pausado', concluido:'Concluído', arquivado:'Arquivado'};
+const LB_UNID    = {capitulos:'cap.', paginas:'pág.', aulas:'aulas', modulos:'mód.'};
+const ORDEM_RES  = ['ativo','fila','pausado','concluido','arquivado'];
+
+const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+let supa=null, user=null;
+const $=id=>document.getElementById(id);
+function toast(m){const t=$('toast');t.innerHTML=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700);}
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function fmtDate(iso){ if(!iso)return''; const [y,m,d]=iso.split('-');
+  const meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  return `${d} ${meses[+m-1]} ${y}`; }
+
+/* ---------- estado em memória ---------- */
+let trilhas=[], topics=[], subsByTopic={}, recursos=[], diaryCache=[];
+let openTrilhas=new Set(), openTopics=new Set(), editandoRecurso=null;
+
+/* ============================================================
+   INÍCIO
+   ============================================================ */
+(function boot(){
+  if(!CONFIG.url || !CONFIG.anonKey){ $('configWarn').style.display='block'; $('loginForm').style.display='none'; return; }
+  supa = window.supabase.createClient(CONFIG.url, CONFIG.anonKey);
+  supa.auth.getSession().then(({data})=>{ if(data.session) enterApp(data.session.user); });
+  supa.auth.onAuthStateChange((_e,session)=>{ if(session) enterApp(session.user); });
+})();
+
+$('loginBtn')?.addEventListener('click', async ()=>{
+  const email=$('email').value.trim();
+  if(!email){ $('loginMsg').style.color='var(--tomato)'; $('loginMsg').textContent='Digite seu e-mail.'; return; }
+  $('loginBtn').disabled=true; $('loginMsg').style.color='var(--muted)'; $('loginMsg').textContent='Enviando…';
+  const {error}=await supa.auth.signInWithOtp({email,options:{emailRedirectTo:window.location.href}});
+  $('loginBtn').disabled=false;
+  if(error){ $('loginMsg').style.color='var(--tomato)'; $('loginMsg').textContent='Erro: '+error.message; }
+  else{ $('loginMsg').style.color='var(--sage)'; $('loginMsg').textContent='Link enviado! Abra o link neste aparelho.'; }
+});
+
+async function enterApp(u){
+  if(user) return;                 /* evita entrar duas vezes */
+  user=u; $('gate').style.display='none'; $('app').style.display='block';
+  $('userEmail').textContent=u.email;
+  ligarEventosPlano(); ligarEventosBiblioteca();
+  await carregarTudo();
+  $('dyDate').value=hojeLocal();
+}
+
+$('signout')?.addEventListener('click', async ()=>{ await supa.auth.signOut(); location.reload(); });
+
+document.querySelectorAll('nav.tabs button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); $('tab-'+b.dataset.tab).classList.add('active');
+    window.scrollTo(0,0);
+  });
+});
+
+/* ============================================================
+   CARGA DOS DADOS
+   ============================================================ */
+async function carregarTudo(){
+  /* A ordem importa:
+     - recursos primeiro, porque cada subtópico mostra de qual material veio;
+     - depois o plano, que já encontra os recursos carregados;
+     - por fim redesenhamos a biblioteca, agora sabendo o nome das trilhas. */
+  await carregarRecursos();
+  await carregarPlano();
+  preencherSelectTrilhas();
+  renderRecursos();
+  await carregarDiario();
+}
+
+async function carregarPlano(){
+  try{
+    const [tr,tp,sb]=await Promise.all([
+      supa.from('estudo_trilhas').select('*').eq('user_id',user.id).order('ordem'),
+      supa.from('estudo_topicos').select('*').eq('user_id',user.id).order('ordem'),
+      supa.from('estudo_subtopicos').select('*').eq('user_id',user.id).order('ordem')
+    ]);
+    trilhas = tr.data||[];
+    topics  = tp.data||[];
+    subsByTopic={};
+    (sb.data||[]).forEach(r=>{ (subsByTopic[r.topico_id]=subsByTopic[r.topico_id]||[]).push(r); });
+    /* abre a trilha ativa na primeira carga */
+    if(!openTrilhas.size){ const a=trilhas.find(t=>t.status==='ativa'); if(a) openTrilhas.add(a.id); }
+  }catch(e){ trilhas=[]; topics=[]; subsByTopic={}; }
+  renderPlano();
+}
+
+/* ============================================================
+   PLANO — cálculos
+   ============================================================ */
+function topicStats(topicoId){
+  const s=subsByTopic[topicoId]||[];
+  return {done:s.filter(x=>x.status==='concluido').length, total:s.length};
+}
+function trilhaStats(trilhaId){
+  let done=0,total=0;
+  topics.filter(t=>t.trilha_id===trilhaId).forEach(t=>{
+    const s=topicStats(t.id); done+=s.done; total+=s.total;
+  });
+  return {done,total};
+}
+function proximoPasso(trilhaId){
+  const tps=topics.filter(t=>t.trilha_id===trilhaId).sort((a,b)=>a.ordem-b.ordem);
+  for(const t of tps){
+    const subs=(subsByTopic[t.id]||[]).slice().sort((a,b)=>a.ordem-b.ordem);
+    const emAndamento=subs.find(s=>s.status==='em_andamento');
+    if(emAndamento) return {topico:t, sub:emAndamento};
+    const pendente=subs.find(s=>s.status!=='concluido');
+    if(pendente) return {topico:t, sub:pendente};
+  }
+  return null;
+}
+function contarTravados(){
+  let n=0; Object.values(subsByTopic).forEach(arr=>{ n+=arr.filter(s=>s.status==='travado').length; });
+  return n;
+}
+
+/* ============================================================
+   PLANO — desenho na tela
+   ============================================================ */
+function renderPlano(){
+  const ativa = trilhas.find(t=>t.status==='ativa') || trilhas[0];
+
+  /* medidor do topo: foca na trilha ativa */
+  if(ativa){
+    const st=trilhaStats(ativa.id);
+    const pct=st.total?Math.round(st.done/st.total*100):0;
+    $('pct').textContent=pct+'%';
+    $('barfill').style.width=pct+'%';
+    $('count').textContent=`${ativa.titulo} · ${st.done}/${st.total} subtópicos`;
+    const p=proximoPasso(ativa.id);
+    const trav=contarTravados();
+    let foco = p
+      ? `<b>Próximo passo:</b> ${esc(p.sub.titulo)} <span style="opacity:.7">— ${esc(p.topico.titulo)}</span>`
+      : `<b>Trilha concluída.</b> Hora de abrir a próxima.`;
+    if(trav) foco += `<br><span style="color:#F0A28F">⚑ ${trav} item${trav>1?'s':''} travado${trav>1?'s':''} — me conte no diário.</span>`;
+    $('foco').innerHTML=foco;
+  }else{
+    $('pct').textContent='—'; $('count').textContent='Nenhuma trilha cadastrada ainda.'; $('foco').innerHTML='';
+  }
+
+  /* lista de trilhas */
+  const el=$('trilhas');
+  if(!trilhas.length){
+    el.innerHTML='<div class="empty">Nenhuma trilha. Rode a migração no Supabase para semear o plano.</div>';
+    return;
+  }
+  el.innerHTML = trilhas.map(tr=>{
+    const st=trilhaStats(tr.id);
+    const aberta=openTrilhas.has(tr.id);
+    const pct=st.total?Math.round(st.done/st.total*100):0;
+    const meus=topics.filter(t=>t.trilha_id===tr.id).sort((a,b)=>a.ordem-b.ordem);
+    return `
+    <div class="trilha ${aberta?'open':''} st-${tr.status}" data-trilha="${tr.id}">
+      <button class="trilha-head" data-toggletr="${tr.id}">
+        <span class="trilha-num">${String(tr.ordem).padStart(2,'0')}</span>
+        <span class="trilha-meta">
+          <span class="trilha-title">${esc(tr.titulo)}</span>
+          <span class="trilha-when">
+            <span class="badge b-${tr.status}">${LB_TRILHA[tr.status]||tr.status}</span>
+            ${tr.periodo?esc(tr.periodo):''}
+          </span>
+        </span>
+        <span class="trilha-prog ${st.done?'':'zero'}">${st.total?st.done+'/'+st.total:'—'}</span>
+        <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="trilha-body">
+        ${tr.objetivo?`<div class="trilha-intro">${esc(tr.objetivo)}</div>`:''}
+        ${tr.dica?`<div class="tip"><b>Nota:</b> ${esc(tr.dica)}</div>`:''}
+        ${st.total?`<div class="tbar"><div class="tbar-fill" style="width:${pct}%"></div></div>`:''}
+        <div class="topics">${meus.length?meus.map(t=>renderTopico(t)).join(''):'<div class="topics-empty">Sem tópicos nesta trilha ainda.</div>'}</div>
+        <div class="trilha-actions">
+          <button class="mini-btn" data-addtop="${tr.id}">+ Tópico</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  ligarBotoesPlano();
+}
+
+function renderTopico(t){
+  const st=topicStats(t.id);
+  const aberto=openTopics.has(t.id);
+  const pct=st.total?Math.round(st.done/st.total*100):0;
+  const subs=(subsByTopic[t.id]||[]).slice().sort((a,b)=>a.ordem-b.ordem);
+  return `
+  <div class="topic ${aberto?'open':''}" data-topic="${t.id}">
+    <div class="topic-head">
+      <button class="topic-toggle" data-toggletp="${t.id}">
+        <svg class="tw-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        <span style="flex:1;min-width:0">
+          <span class="topic-title">${esc(t.titulo)}</span>
+          ${t.objetivo?`<span class="topic-obj">${esc(t.objetivo)}</span>`:''}
+        </span>
+      </button>
+      <span class="topic-frac ${st.done?'':'zero'}">${st.total?st.done+'/'+st.total:'—'}</span>
+      <span class="tmenu">
+        <button class="icon-btn" data-edittop="${t.id}" title="renomear">&#9998;</button>
+        <button class="icon-btn danger" data-deltop="${t.id}" title="excluir">&#10005;</button>
+      </span>
+    </div>
+    ${st.total?`<div class="tbar"><div class="tbar-fill" style="width:${pct}%"></div></div>`:''}
+    <div class="subs">
+      ${subs.map(s=>renderSub(s)).join('')}
+      <button class="add-sub" data-addsub="${t.id}">+ Subtópico</button>
+    </div>
+  </div>`;
+}
+
+function renderSub(s){
+  const rec = recursos.find(r=>r.id===s.recurso_id);
+  const flag = s.status==='em_andamento' ? '<div class="flag-line f-em_andamento">▶ fazendo agora</div>'
+             : s.status==='travado'      ? '<div class="flag-line f-travado">⚑ travado — preciso de ajuda aqui</div>' : '';
+  const conf = s.status==='concluido' ? `
+    <div class="conf">
+      <span class="conf-label">confiança</span>
+      <span class="conf-dots">${[1,2,3,4,5].map(n=>
+        `<button class="conf-dot ${s.confianca>=n?'on':''}" data-conf="${s.id}" data-n="${n}" title="${n} de 5"></button>`).join('')}</span>
+    </div>` : '';
+  const refLinha = (rec || s.referencia) ? `
+    <div class="sub-ref">
+      <span class="tipo-chip">${LB_TIPO[s.tipo]||s.tipo}</span>
+      ${rec?`<span>📖 ${esc(rec.titulo)}</span>`:''}
+      ${s.referencia?`<span>· ${esc(s.referencia)}</span>`:''}
+    </div>` : `<div class="sub-ref"><span class="tipo-chip">${LB_TIPO[s.tipo]||s.tipo}</span></div>`;
+
+  return `
+  <div class="sub st-${s.status}" data-sub="${s.id}">
+    <button class="sub-box" data-done="${s.id}" title="concluir">${CHECK}</button>
+    <div class="sub-main">
+      <div class="sub-title">${esc(s.titulo)}</div>
+      ${refLinha}
+      ${flag}
+      ${conf}
+      <div class="sub-tools">
+        <button class="obs-btn" data-det="${s.id}">${(s.observacao&&s.observacao.trim())?'✎ nota':'+ detalhes'}</button>
+        <button class="icon-btn" data-flag="${s.id}" title="fazendo / travado">&#9873;</button>
+        <button class="icon-btn" data-mv="${s.id}" data-dir="up" title="subir">&#8593;</button>
+        <button class="icon-btn" data-mv="${s.id}" data-dir="down" title="descer">&#8595;</button>
+        <button class="icon-btn danger" data-delsub="${s.id}" title="excluir">&#10005;</button>
+      </div>
+      ${(s.observacao&&s.observacao.trim())?`<div class="obs-preview" data-obsprev="${s.id}">${esc(s.observacao)}</div>`:''}
+      <div class="det" data-det-wrap="${s.id}">
+        <div class="field"><label>Título</label><input type="text" data-f="titulo" value="${esc(s.titulo)}" /></div>
+        <div class="det-row">
+          <div class="field"><label>Tipo</label>
+            <select data-f="tipo">
+              ${['leitura','exercicio','projeto','video','revisao'].map(k=>
+                `<option value="${k}" ${s.tipo===k?'selected':''}>${LB_TIPO[k]}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field"><label>Referência</label><input type="text" data-f="referencia" value="${esc(s.referencia||'')}" placeholder="cap. 3, p. 42" /></div>
+        </div>
+        <div class="field"><label>Material</label>
+          <select data-f="recurso_id">
+            <option value="">— nenhum —</option>
+            ${recursos.map(r=>`<option value="${r.id}" ${s.recurso_id===r.id?'selected':''}>${esc(r.titulo)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field"><label>Observação</label><textarea data-f="observacao" placeholder="O que entendi, onde travei…">${esc(s.observacao||'')}</textarea></div>
+        <div class="btn-row">
+          <button class="btn honey" data-savedet="${s.id}" style="padding:9px 16px;font-size:13px">Salvar</button>
+          <button class="btn ghost" data-closedet="${s.id}" style="padding:9px 16px;font-size:13px">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ============================================================
+   PLANO — ações (cliques)
+   ============================================================ */
+function ligarEventosPlano(){ /* nada global por enquanto; tudo é religado após cada render */ }
+
+function ligarBotoesPlano(){
+  const el=$('trilhas');
+
+  /* abrir/fechar trilha */
+  el.querySelectorAll('[data-toggletr]').forEach(b=>b.addEventListener('click',()=>{
+    const id=b.getAttribute('data-toggletr');
+    openTrilhas.has(id)?openTrilhas.delete(id):openTrilhas.add(id);
+    renderPlano();
+  }));
+
+  /* abrir/fechar tópico */
+  el.querySelectorAll('[data-toggletp]').forEach(b=>b.addEventListener('click',()=>{
+    const id=b.getAttribute('data-toggletp');
+    openTopics.has(id)?openTopics.delete(id):openTopics.add(id);
+    renderPlano();
+  }));
+
+  /* concluir / desfazer subtópico */
+  el.querySelectorAll('[data-done]').forEach(b=>b.addEventListener('click',()=>
+    alternarConcluido(b.getAttribute('data-done'))));
+
+  /* bandeira: fazendo -> travado -> limpo */
+  el.querySelectorAll('[data-flag]').forEach(b=>b.addEventListener('click',()=>
+    girarBandeira(b.getAttribute('data-flag'))));
+
+  /* confiança */
+  el.querySelectorAll('[data-conf]').forEach(b=>b.addEventListener('click',()=>
+    salvarConfianca(b.getAttribute('data-conf'), +b.getAttribute('data-n'))));
+
+  /* painel de detalhes */
+  el.querySelectorAll('[data-det]').forEach(b=>b.addEventListener('click',()=>
+    abrirDetalhes(b.getAttribute('data-det'))));
+  el.querySelectorAll('[data-closedet]').forEach(b=>b.addEventListener('click',()=>
+    abrirDetalhes(b.getAttribute('data-closedet'), false)));
+  el.querySelectorAll('[data-savedet]').forEach(b=>b.addEventListener('click',()=>
+    salvarDetalhes(b.getAttribute('data-savedet'))));
+
+  /* mover / excluir / criar */
+  el.querySelectorAll('[data-mv]').forEach(b=>b.addEventListener('click',()=>
+    moverSub(b.getAttribute('data-mv'), b.getAttribute('data-dir'))));
+  el.querySelectorAll('[data-delsub]').forEach(b=>b.addEventListener('click',()=>
+    excluirSub(b.getAttribute('data-delsub'))));
+  el.querySelectorAll('[data-addsub]').forEach(b=>b.addEventListener('click',()=>
+    novoSub(b.getAttribute('data-addsub'))));
+  el.querySelectorAll('[data-addtop]').forEach(b=>b.addEventListener('click',()=>
+    novoTopico(b.getAttribute('data-addtop'))));
+  el.querySelectorAll('[data-edittop]').forEach(b=>b.addEventListener('click',()=>
+    editarTopico(b.getAttribute('data-edittop'))));
+  el.querySelectorAll('[data-deltop]').forEach(b=>b.addEventListener('click',()=>
+    excluirTopico(b.getAttribute('data-deltop'))));
+}
+
+/* acha um subtópico pelo id */
+function acharSub(id){
+  for(const tid in subsByTopic){
+    const s=subsByTopic[tid].find(x=>x.id===id);
+    if(s) return {sub:s, tid};
+  }
+  return null;
+}
+
+async function alternarConcluido(id){
+  const r=acharSub(id); if(!r) return;
+  const virandoConcluido = r.sub.status!=='concluido';
+  const novo = virandoConcluido
+    ? {status:'concluido', concluido:true,  data_conclusao:hojeLocal()}
+    : {status:'nao_iniciado', concluido:false, data_conclusao:null, confianca:null};
+  Object.assign(r.sub, novo);
+  renderPlano();
+  try{
+    await supa.from('estudo_subtopicos').update(novo).eq('id',id);
+    if(virandoConcluido) toast('Feito! Agora diga o quanto confia nisso ↓');
+  }catch(e){ toast('Erro ao salvar'); }
+}
+
+async function girarBandeira(id){
+  const r=acharSub(id); if(!r) return;
+  const atual=r.sub.status;
+  const proximo = atual==='em_andamento' ? 'travado'
+                : atual==='travado'      ? 'nao_iniciado'
+                : 'em_andamento';
+  const novo={status:proximo, concluido:false, data_conclusao:null};
+  Object.assign(r.sub, novo);
+  renderPlano();
+  try{ await supa.from('estudo_subtopicos').update(novo).eq('id',id); }
+  catch(e){ toast('Erro ao salvar'); }
+}
+
+async function salvarConfianca(id,n){
+  const r=acharSub(id); if(!r) return;
+  const valor = r.sub.confianca===n ? null : n;   /* tocar de novo limpa */
+  r.sub.confianca=valor; renderPlano();
+  try{ await supa.from('estudo_subtopicos').update({confianca:valor}).eq('id',id); }
+  catch(e){ toast('Erro ao salvar'); }
+}
+
+function abrirDetalhes(id, abrir){
+  const wrap=document.querySelector(`[data-det-wrap="${id}"]`); if(!wrap) return;
+  const mostrar = (abrir===undefined) ? !wrap.classList.contains('show') : abrir;
+  wrap.classList.toggle('show', mostrar);
+  const prev=document.querySelector(`[data-obsprev="${id}"]`);
+  if(prev) prev.style.display = mostrar ? 'none' : '';
+}
+
+async function salvarDetalhes(id){
+  const wrap=document.querySelector(`[data-det-wrap="${id}"]`); if(!wrap) return;
+  const val=f=>{ const e=wrap.querySelector(`[data-f="${f}"]`); return e?e.value.trim():''; };
+  const titulo=val('titulo');
+  if(!titulo){ toast('O título não pode ficar vazio'); return; }
+  const dados={
+    titulo,
+    tipo:       val('tipo')||'leitura',
+    referencia: val('referencia')||null,
+    recurso_id: val('recurso_id')||null,
+    observacao: val('observacao')||null
+  };
+  const r=acharSub(id); if(r) Object.assign(r.sub,dados);
+  try{
+    await supa.from('estudo_subtopicos').update(dados).eq('id',id);
+    toast('Salvo');
+  }catch(e){ toast('Erro ao salvar'); }
+  renderPlano();
+}
+
+async function novoSub(topicoId){
+  const titulo=prompt('Novo subtópico:'); if(!titulo||!titulo.trim()) return;
+  const irmaos=subsByTopic[topicoId]||[];
+  const ordem=irmaos.length?Math.max(...irmaos.map(s=>s.ordem))+1:0;
+  try{
+    await supa.from('estudo_subtopicos').insert({
+      user_id:user.id, topico_id:topicoId, titulo:titulo.trim(),
+      ordem, status:'nao_iniciado', tipo:'leitura'
+    });
+    openTopics.add(topicoId);
+    await carregarPlano();
+  }catch(e){ toast('Erro ao criar'); }
+}
+
+async function excluirSub(id){
+  if(!confirm('Excluir este subtópico?')) return;
+  try{ await supa.from('estudo_subtopicos').delete().eq('id',id); await carregarPlano(); }
+  catch(e){ toast('Erro ao excluir'); }
+}
+
+async function moverSub(id,dir){
+  const r=acharSub(id); if(!r) return;
+  const irmaos=(subsByTopic[r.tid]||[]).slice().sort((a,b)=>a.ordem-b.ordem);
+  const i=irmaos.findIndex(s=>s.id===id);
+  const j = dir==='up' ? i-1 : i+1;
+  if(j<0||j>=irmaos.length) return;
+  const a=irmaos[i], b=irmaos[j];
+  try{
+    await Promise.all([
+      supa.from('estudo_subtopicos').update({ordem:b.ordem}).eq('id',a.id),
+      supa.from('estudo_subtopicos').update({ordem:a.ordem}).eq('id',b.id)
+    ]);
+    await carregarPlano();
+  }catch(e){ toast('Erro ao mover'); }
+}
+
+async function novoTopico(trilhaId){
+  const titulo=prompt('Novo tópico:'); if(!titulo||!titulo.trim()) return;
+  const irmaos=topics.filter(t=>t.trilha_id===trilhaId);
+  const ordem=irmaos.length?Math.max(...irmaos.map(t=>t.ordem))+1:0;
+  try{
+    await supa.from('estudo_topicos').insert({
+      user_id:user.id, trilha_id:trilhaId, titulo:titulo.trim(), ordem, status:'ativo'
+    });
+    openTrilhas.add(trilhaId);
+    await carregarPlano();
+  }catch(e){ toast('Erro ao criar'); }
+}
+
+async function editarTopico(id){
+  const t=topics.find(x=>x.id===id); if(!t) return;
+  const titulo=prompt('Título do tópico:', t.titulo); if(titulo===null) return;
+  if(!titulo.trim()){ toast('Título vazio'); return; }
+  const objetivo=prompt('Objetivo (para que serve este tópico):', t.objetivo||'');
+  const dados={titulo:titulo.trim(), objetivo:(objetivo||'').trim()||null};
+  try{ await supa.from('estudo_topicos').update(dados).eq('id',id); await carregarPlano(); }
+  catch(e){ toast('Erro ao salvar'); }
+}
+
+async function excluirTopico(id){
+  const st=topicStats(id);
+  if(!confirm(st.total?`Excluir este tópico e seus ${st.total} subtópicos?`:'Excluir este tópico?')) return;
+  try{
+    await supa.from('estudo_subtopicos').delete().eq('topico_id',id);
+    await supa.from('estudo_topicos').delete().eq('id',id);
+    await carregarPlano();
+  }catch(e){ toast('Erro ao excluir'); }
+}
+
+/* ============================================================
+   BIBLIOTECA
+   ============================================================ */
+async function carregarRecursos(){
+  try{
+    const r=await supa.from('estudo_recursos').select('*').eq('user_id',user.id).order('ordem');
+    recursos=r.data||[];
+  }catch(e){ recursos=[]; }
+  preencherSelectTrilhas();
+  renderRecursos();
+}
+
+function preencherSelectTrilhas(){
+  const sel=$('rsTrilha'); if(!sel) return;
+  sel.innerHTML='<option value="">— nenhuma —</option>'+
+    trilhas.map(t=>`<option value="${t.id}">${esc(t.titulo)}</option>`).join('');
+}
+
+function renderRecursos(){
+  const el=$('resLista');
+  if(!recursos.length){
+    el.innerHTML='<div class="empty">Biblioteca vazia. Adicione seu primeiro livro — não precisa de link.</div>';
+    return;
+  }
+  let html='';
+  ORDEM_RES.forEach(status=>{
+    const grupo=recursos.filter(r=>r.status===status);
+    if(!grupo.length) return;
+    html+=`<div class="grp-title">${LB_STATUS[status]} · ${grupo.length}</div>`;
+    html+=grupo.map(r=>cardRecurso(r)).join('');
+  });
+  el.innerHTML=html;
+  ligarBotoesRecursos();
+}
+
+function cardRecurso(r){
+  const trilha=trilhas.find(t=>t.id===r.trilha_id);
+  const temTotal = r.total_unidades && r.total_unidades>0;
+  const pct = temTotal ? Math.min(100, Math.round((r.unidades_feitas||0)/r.total_unidades*100)) : 0;
+  const titulo = r.url
+    ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.titulo)}</a>`
+    : esc(r.titulo);
+  return `
+  <div class="rescard ${r.status}">
+    <div class="res-top">
+      <div class="res-main">
+        <span class="res-tipo t-${r.tipo}">${LB_RES[r.tipo]||r.tipo}</span>
+        <h4>${titulo}</h4>
+        ${r.autor?`<div class="res-autor">${esc(r.autor)}</div>`:''}
+        <div class="res-loc">
+          ${r.localizacao?esc(r.localizacao):''}${(r.localizacao&&trilha)?' · ':''}${trilha?esc(trilha.titulo):''}
+        </div>
+      </div>
+      <span class="tmenu">
+        <button class="icon-btn" data-editres="${r.id}" title="editar">&#9998;</button>
+        <button class="icon-btn danger" data-delres="${r.id}" title="excluir">&#10005;</button>
+      </span>
+    </div>
+    <div class="res-prog">
+      <button class="step" data-stepres="${r.id}" data-d="-1">&minus;</button>
+      <div class="pbar"><i style="width:${pct}%"></i></div>
+      <button class="step" data-stepres="${r.id}" data-d="1">+</button>
+      <span class="pnum">${r.unidades_feitas||0}${temTotal?'/'+r.total_unidades:''} ${LB_UNID[r.unidade]||''}</span>
+    </div>
+    ${r.nota?`<div class="res-nota">${esc(r.nota)}</div>`:''}
+  </div>`;
+}
+
+function ligarBotoesRecursos(){
+  const el=$('resLista');
+  el.querySelectorAll('[data-stepres]').forEach(b=>b.addEventListener('click',()=>
+    passoRecurso(b.getAttribute('data-stepres'), +b.getAttribute('data-d'))));
+  el.querySelectorAll('[data-editres]').forEach(b=>b.addEventListener('click',()=>
+    editarRecurso(b.getAttribute('data-editres'))));
+  el.querySelectorAll('[data-delres]').forEach(b=>b.addEventListener('click',()=>
+    excluirRecurso(b.getAttribute('data-delres'))));
+}
+
+async function passoRecurso(id,d){
+  const r=recursos.find(x=>x.id===id); if(!r) return;
+  let v=(r.unidades_feitas||0)+d;
+  if(v<0) v=0;
+  if(r.total_unidades && v>r.total_unidades) v=r.total_unidades;
+  r.unidades_feitas=v; renderRecursos();
+  try{ await supa.from('estudo_recursos').update({unidades_feitas:v}).eq('id',id); }
+  catch(e){ toast('Erro ao salvar'); }
+}
+
+function ligarEventosBiblioteca(){
+  $('resToggleForm').addEventListener('click',()=>{
+    const f=$('resForm');
+    const abrindo = f.style.display==='none';
+    f.style.display = abrindo ? 'block' : 'none';
+    if(abrindo){ editandoRecurso=null; limparFormRecurso(); }
+  });
+  $('rsCancelar').addEventListener('click',()=>{
+    $('resForm').style.display='none'; editandoRecurso=null; limparFormRecurso();
+  });
+  $('rsSalvar').addEventListener('click', salvarRecurso);
+}
+
+function limparFormRecurso(){
+  ['rsTitulo','rsAutor','rsUrl','rsLocal','rsTotal','rsNota'].forEach(k=>$(k).value='');
+  $('rsTipo').value='livro_fisico'; $('rsStatus').value='fila';
+  $('rsUnidade').value='capitulos'; $('rsTrilha').value='';
+  $('rsSalvar').textContent='Salvar material';
+}
+
+function editarRecurso(id){
+  const r=recursos.find(x=>x.id===id); if(!r) return;
+  editandoRecurso=id;
+  $('rsTitulo').value=r.titulo||''; $('rsAutor').value=r.autor||'';
+  $('rsTipo').value=r.tipo||'livro_fisico'; $('rsStatus').value=r.status||'fila';
+  $('rsUrl').value=r.url||''; $('rsLocal').value=r.localizacao||'';
+  $('rsTrilha').value=r.trilha_id||''; $('rsUnidade').value=r.unidade||'capitulos';
+  $('rsTotal').value=r.total_unidades||''; $('rsNota').value=r.nota||'';
+  $('rsSalvar').textContent='Salvar alterações';
+  $('resForm').style.display='block';
+  $('resForm').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+async function salvarRecurso(){
+  const titulo=$('rsTitulo').value.trim();
+  if(!titulo){ toast('O título é obrigatório'); return; }
+  const dados={
+    titulo,
+    autor:          $('rsAutor').value.trim()||null,
+    tipo:           $('rsTipo').value,
+    status:         $('rsStatus').value,
+    url:            $('rsUrl').value.trim()||null,
+    localizacao:    $('rsLocal').value.trim()||null,
+    trilha_id:      $('rsTrilha').value||null,
+    unidade:        $('rsUnidade').value,
+    total_unidades: $('rsTotal').value ? +$('rsTotal').value : null,
+    nota:           $('rsNota').value.trim()||null
+  };
+  try{
+    if(editandoRecurso){
+      await supa.from('estudo_recursos').update(dados).eq('id',editandoRecurso);
+      toast('Material atualizado');
+    }else{
+      dados.user_id=user.id;
+      dados.ordem = recursos.length ? Math.max(...recursos.map(r=>r.ordem))+1 : 0;
+      await supa.from('estudo_recursos').insert(dados);
+      toast('Material salvo');
+    }
+    editandoRecurso=null; limparFormRecurso(); $('resForm').style.display='none';
+    await carregarRecursos();
+    renderPlano();   /* o seletor de material dentro dos subtópicos muda também */
+  }catch(e){ toast('Erro ao salvar'); }
+}
+
+async function excluirRecurso(id){
+  if(!confirm('Excluir este material da biblioteca?')) return;
+  try{ await supa.from('estudo_recursos').delete().eq('id',id); await carregarRecursos(); renderPlano(); }
+  catch(e){ toast('Erro ao excluir'); }
+}
+
+/* ============================================================
+   DIÁRIO
+   ============================================================ */
+async function carregarDiario(){
+  let data=[];
+  try{
+    const r=await supa.from('estudo_diario').select('*').eq('user_id',user.id)
+      .order('data',{ascending:false}).order('created_at',{ascending:false});
+    data=r.data||[];
+  }catch(e){}
+  diaryCache=data;
+  const el=$('diaryList');
+  if(!data.length){
+    el.innerHTML='<div class="empty">Seu diário está vazio. A primeira entrada é sempre a mais difícil — escreva duas linhas do que fez hoje.</div>';
+    return;
+  }
+  el.innerHTML=data.map(d=>`
+    <div class="entry">
+      <div class="edate"><span>${fmtDate(d.data)}</span><button class="del" data-del="${d.id}">excluir</button></div>
+      <div class="body">${esc(d.corpo)}</div>
+    </div>`).join('');
+  el.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>
+    excluirEntrada(b.getAttribute('data-del'))));
+}
+
+$('dyAdd').addEventListener('click', async ()=>{
+  const data=$('dyDate').value, corpo=$('dyBody').value.trim();
+  if(!corpo){ toast('Escreva algo antes de salvar'); return; }
+  try{
+    await supa.from('estudo_diario').insert({user_id:user.id, data:data||hojeLocal(), corpo});
+    $('dyBody').value=''; toast('Entrada salva'); carregarDiario();
+  }catch(e){ toast('Erro ao salvar'); }
+});
+
+async function excluirEntrada(id){
+  if(!confirm('Excluir esta entrada?')) return;
+  try{ await supa.from('estudo_diario').delete().eq('id',id); carregarDiario(); }catch(e){}
+}
+
+/* ============================================================
+   RELATÓRIO EM PDF (v2)
+   ============================================================ */
+$('genPdf').addEventListener('click',()=>{
+  let od=0, ot=0;
+  trilhas.forEach(tr=>{ const s=trilhaStats(tr.id); od+=s.done; ot+=s.total; });
+  const pctGeral = ot ? Math.round(od/ot*100) : 0;
+  const ativa = trilhas.find(t=>t.status==='ativa');
+  const passo = ativa ? proximoPasso(ativa.id) : null;
+
+  /* itens travados, para eu saber onde entrar */
+  const travados=[];
+  topics.forEach(t=>{
+    (subsByTopic[t.id]||[]).filter(s=>s.status==='travado').forEach(s=>
+      travados.push(`${s.titulo} — ${t.titulo}`));
+  });
+
+  const blocoTrilhas = trilhas.map(tr=>{
+    const st=trilhaStats(tr.id);
+    const meus=topics.filter(t=>t.trilha_id===tr.id).sort((a,b)=>a.ordem-b.ordem);
+    const linhasTop = meus.map(t=>{
+      const ts=topicStats(t.id);
+      const subs=(subsByTopic[t.id]||[]).slice().sort((a,b)=>a.ordem-b.ordem);
+      const linhasSub = subs.map(s=>{
+        const marca = s.status==='concluido' ? '&#9745;'
+                    : s.status==='travado'   ? '&#9873;'
+                    : s.status==='em_andamento' ? '&#9654;' : '&#9744;';
+        const conf = (s.status==='concluido'&&s.confianca) ? ` [confiança ${s.confianca}/5]` : '';
+        const ref  = s.referencia ? ` (${esc(s.referencia)})` : '';
+        const obs  = (s.observacao&&s.observacao.trim()) ? `<div class="robs">↳ ${esc(s.observacao)}</div>` : '';
+        return `<div class="rsub">${marca} ${esc(s.titulo)}${ref}${conf}${obs}</div>`;
+      }).join('');
+      return `<div class="rtopic"><b>${esc(t.titulo)}</b> — ${ts.total?ts.done+'/'+ts.total:'sem subtópicos'}${linhasSub}</div>`;
+    }).join('');
+    return `<div class="rtrilha"><b>${String(tr.ordem).padStart(2,'0')}. ${esc(tr.titulo)}</b> [${LB_TRILHA[tr.status]}] — ${st.total?st.done+'/'+st.total+' subtópicos':'—'}</div>${linhasTop}`;
+  }).join('');
+
+  const blocoBiblio = recursos.length ? ORDEM_RES.map(status=>{
+    const grupo=recursos.filter(r=>r.status===status);
+    if(!grupo.length) return '';
+    return `<div class="rtrilha"><b>${LB_STATUS[status]}</b></div>` + grupo.map(r=>{
+      const prog = r.total_unidades ? ` — ${r.unidades_feitas||0}/${r.total_unidades} ${LB_UNID[r.unidade]||''}` : '';
+      return `<div class="rres">• ${esc(r.titulo)}${r.autor?' — '+esc(r.autor):''} [${LB_RES[r.tipo]}]${prog}</div>`;
+    }).join('');
+  }).join('') : '<p style="font-size:13px;color:#888">Biblioteca vazia.</p>';
+
+  const blocoDiario = diaryCache.length
+    ? diaryCache.map(d=>`<div class="rentry"><div class="rd">${fmtDate(d.data)}</div><div class="rb">${esc(d.corpo)}</div></div>`).join('')
+    : '<p style="font-size:13px;color:#888">Sem entradas no diário ainda.</p>';
+
+  $('printReport').innerHTML=`
+    <div class="report-head">
+      <h2>Relatório de Estudos — Danilo</h2>
+      <div class="rmeta">
+        Gerado em ${fmtDate(hojeLocal())} · Progresso geral: ${pctGeral}% (${od}/${ot})<br>
+        ${ativa?`Trilha ativa: ${esc(ativa.titulo)}`:''}
+        ${passo?` · Próximo passo: ${esc(passo.sub.titulo)}`:''}
+      </div>
+    </div>
+    ${travados.length?`<div class="report-block"><h3>Onde estou travado (${travados.length})</h3>${
+      travados.map(t=>`<div class="rres">&#9873; ${esc(t)}</div>`).join('')}</div>`:''}
+    <div class="report-block"><h3>Trilhas, tópicos e subtópicos</h3>${blocoTrilhas}</div>
+    <div class="report-block"><h3>Biblioteca</h3>${blocoBiblio}</div>
+    <div class="report-block"><h3>Diário de estudo</h3>${blocoDiario}</div>`;
+  setTimeout(()=>window.print(),80);
+});
+</script>
+</body>
+</html>
